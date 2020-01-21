@@ -11,7 +11,7 @@ type PilotView struct {
 	SupplierId string `json:"supplier_id"`
 	MarketId   string `json:"market_id"`
 	ServiceId  string `json:"service_id"`
-	State      string `json:"status"`
+	Status     string `json:"status"`
 	CreatedAt  int64  `json:"created_at"`
 	UpdatedAt  int64  `json:"updated_at"`
 }
@@ -24,7 +24,7 @@ func toPilotView(pilot entity.Pilot) PilotView {
 		SupplierId: pilot.SupplierId,
 		MarketId:   pilot.MarketId,
 		ServiceId:  pilot.ServiceId,
-		State:      string(pilot.State),
+		Status:     string(pilot.Status),
 		CreatedAt:  pilot.CreatedAt.Unix(),
 		UpdatedAt:  pilot.UpdatedAt.Unix(),
 	}

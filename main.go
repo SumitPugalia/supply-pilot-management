@@ -29,6 +29,12 @@ func assignRoutes(router *mux.Router) *mux.Router {
 		httpTransport.ServerErrorEncoder(encodeErrorResponse),
 	}
 
+	statusHandler := httpTransport.NewServer(
+		endpoint.MakeStatusEndpoint(service),
+		endpoint.DecodeStatusRequest,
+		endpoint.EncodeResponse,
+	)
+
 	listPilotsHandler := httpTransport.NewServer(
 		endpoint.MakeListPilotsEndpoint(service),
 		endpoint.DecodeListPilotsRequest,
@@ -64,19 +70,20 @@ func assignRoutes(router *mux.Router) *mux.Router {
 		options...,
 	)
 
-	ChangeStatePilotHandler := httpTransport.NewServer(
-		endpoint.MakeChangeStatePilotEndpoint(service),
-		endpoint.DecodeChangeStatePilotRequest,
+	ChangePilotStatusHandler := httpTransport.NewServer(
+		endpoint.MakeChangePilotStatusEndpoint(service),
+		endpoint.DecodeChangePilotStatusRequest,
 		endpoint.EncodeResponse,
 		options...,
 	)
 
+	router.Handle("/supply/pilots/status", statusHandler).Methods("GET")
 	router.Handle("/supply/pilots", listPilotsHandler).Methods("GET")
 	router.Handle("/supply/pilots/{id}", getPilotHandler).Methods("GET")
 	router.Handle("/supply/pilots", CreatePilotHandler).Methods("POST")
 	router.Handle("/supply/pilots/{id}", UpdatePilotHandler).Methods("PUT")
 	router.Handle("/supply/pilots/{id}", DeletePilotHandler).Methods("DELETE")
-	router.Handle("/supply/pilots/{id}/{state}", ChangeStatePilotHandler).Methods("PUT")
+	router.Handle("/supply/pilots/{id}/{status}", ChangePilotStatusHandler).Methods("PATCH")
 	return router
 }
 
@@ -97,7 +104,7 @@ func encodeErrorResponse(_ context.Context, err error, w http.ResponseWriter) {
 func codeFrom(err error) int {
 	switch err {
 	case endpoint.ErrBadRequest,
-		entity.InvalidPilotState:
+		entity.InvalidPilotStatus:
 		return http.StatusBadRequest
 	case entity.PilotDoesNotExistError:
 		return http.StatusNotFound

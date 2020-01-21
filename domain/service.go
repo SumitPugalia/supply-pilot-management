@@ -6,8 +6,8 @@ type Service interface {
 	ListPilots() ([]entity.Pilot, error)
 	GetPilot(id string) (entity.Pilot, error)
 	CreatePilot(params CreatePilotParams) (entity.Pilot, error)
-	UpdatePilot(params UpdatePilotParams) (entity.Pilot, error)
-	ChangeStatePilot(id string, state string) (entity.Pilot, error)
+	UpdatePilot(id string, params UpdatePilotParams) (entity.Pilot, error)
+	ChangePilotStatus(id string, status string) (entity.Pilot, error)
 	DeletePilot(id string) error
 }
 

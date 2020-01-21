@@ -9,17 +9,17 @@ type Pilot struct {
 	SupplierId string
 	MarketId   string
 	ServiceId  string
-	State      PilotState
+	Status     PilotStatus
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }
 
-type PilotState string
+type PilotStatus string
 
 const (
-	IdlePilotState    PilotState = "IDLE"
-	ActivePilotState  PilotState = "ACTIVE"
-	OffDutyPilotState PilotState = "OFFDUTY"
-	BreakPilotState   PilotState = "BREAK"
-	SuspendPilotState PilotState = "SUSPEND"
+	IdlePilotStatus    PilotStatus = "IDLE"
+	ActivePilotStatus  PilotStatus = "ACTIVE"
+	OffDutyPilotStatus PilotStatus = "OFFDUTY"
+	BreakPilotStatus   PilotStatus = "BREAK"
+	SuspendPilotStatus PilotStatus = "SUSPEND"
 )

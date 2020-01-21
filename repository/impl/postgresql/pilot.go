@@ -24,7 +24,7 @@ type Pilot struct {
 	SupplierId string    `db:"supplier_id"`
 	MarketId   string    `db:"market_id"`
 	ServiceId  string    `db:"service_id"`
-	State      string    `db:"state"`
+	Status     string    `db:"status"`
 	CreatedAt  time.Time `db:"created_at"`
 	UpdatedAt  time.Time `db:"updated_at"`
 	Deleted    bool      `db:"deleted"`
@@ -69,7 +69,7 @@ func (repo *PilotRepo) CreatePilot(params domain.CreatePilotParams) (entity.Pilo
 		UserId:     params.UserId,
 		CodeName:   params.CodeName,
 		SupplierId: params.SupplierId,
-		State:      "IDLE",
+		Status:     "IDLE",
 		MarketId:   params.MarketId,
 		ServiceId:  params.ServiceId,
 		CreatedAt:  now,
@@ -84,9 +84,9 @@ func (repo *PilotRepo) CreatePilot(params domain.CreatePilotParams) (entity.Pilo
 	return pilotRowToPilot(pilot), nil
 }
 
-func (repo *PilotRepo) UpdatePilot(params domain.UpdatePilotParams) (entity.Pilot, error) {
+func (repo *PilotRepo) UpdatePilot(id string, params domain.UpdatePilotParams) (entity.Pilot, error) {
 	pilot := Pilot{}
-	err := repo.readConn.Collection("pilots").Find("id", params.Id).One(&pilot)
+	err := repo.readConn.Collection("pilots").Find("id", id).One(&pilot)
 	if err != nil {
 		if err == db.ErrNoMoreRows {
 			return entity.Pilot{}, entity.PilotDoesNotExistError
@@ -100,7 +100,7 @@ func (repo *PilotRepo) UpdatePilot(params domain.UpdatePilotParams) (entity.Pilo
 	pilot.ServiceId = params.ServiceId
 	pilot.UpdatedAt = time.Now()
 
-	res := repo.writeConn.Collection("pilots").Find("id", pilot.Id)
+	res := repo.writeConn.Collection("pilots").Find("id", id)
 	err = res.Update(pilot)
 
 	if err != nil {
@@ -110,7 +110,7 @@ func (repo *PilotRepo) UpdatePilot(params domain.UpdatePilotParams) (entity.Pilo
 	return pilotRowToPilot(pilot), nil
 }
 
-func (repo *PilotRepo) ChangeStatePilot(id string, state entity.PilotState) (entity.Pilot, error) {
+func (repo *PilotRepo) ChangePilotStatus(id string, status entity.PilotStatus) (entity.Pilot, error) {
 	pilot := Pilot{}
 	err := repo.readConn.Collection("pilots").Find("id", id).One(&pilot)
 	if err != nil {
@@ -119,7 +119,7 @@ func (repo *PilotRepo) ChangeStatePilot(id string, state entity.PilotState) (ent
 		}
 	}
 
-	pilot.State = string(state)
+	pilot.Status = string(status)
 	pilot.UpdatedAt = time.Now()
 
 	res := repo.writeConn.Collection("pilots").Find("id", id)
@@ -159,7 +159,7 @@ func pilotRowToPilot(row Pilot) entity.Pilot {
 		MarketId:   row.MarketId,
 		ServiceId:  row.ServiceId,
 		CodeName:   row.CodeName,
-		State:      entity.PilotState(row.State),
+		Status:     entity.PilotStatus(row.Status),
 		CreatedAt:  row.CreatedAt,
 		UpdatedAt:  row.UpdatedAt,
 	}

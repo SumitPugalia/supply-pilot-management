@@ -28,27 +28,27 @@ func (s ServiceImpl) CreatePilot(params domain.CreatePilotParams) (entity.Pilot,
 	return s.pilotRepo.CreatePilot(params)
 }
 
-func (s ServiceImpl) UpdatePilot(params domain.UpdatePilotParams) (entity.Pilot, error) {
-	return s.pilotRepo.UpdatePilot(params)
+func (s ServiceImpl) UpdatePilot(id string, params domain.UpdatePilotParams) (entity.Pilot, error) {
+	return s.pilotRepo.UpdatePilot(id, params)
 }
 
 func (s ServiceImpl) DeletePilot(id string) error {
 	return s.pilotRepo.DeletePilot(id)
 }
 
-func (s ServiceImpl) ChangeStatePilot(id string, state string) (entity.Pilot, error) {
-	switch state {
+func (s ServiceImpl) ChangePilotStatus(id string, status string) (entity.Pilot, error) {
+	switch status {
 	case "idle":
-		return s.pilotRepo.ChangeStatePilot(id, entity.IdlePilotState)
+		return s.pilotRepo.ChangePilotStatus(id, entity.IdlePilotStatus)
 	case "active":
-		return s.pilotRepo.ChangeStatePilot(id, entity.ActivePilotState)
+		return s.pilotRepo.ChangePilotStatus(id, entity.ActivePilotStatus)
 	case "offduty":
-		return s.pilotRepo.ChangeStatePilot(id, entity.OffDutyPilotState)
+		return s.pilotRepo.ChangePilotStatus(id, entity.OffDutyPilotStatus)
 	case "break":
-		return s.pilotRepo.ChangeStatePilot(id, entity.BreakPilotState)
+		return s.pilotRepo.ChangePilotStatus(id, entity.BreakPilotStatus)
 	case "suspend":
-		return s.pilotRepo.ChangeStatePilot(id, entity.SuspendPilotState)
+		return s.pilotRepo.ChangePilotStatus(id, entity.SuspendPilotStatus)
 	default:
-		return entity.Pilot{}, entity.InvalidPilotState
+		return entity.Pilot{}, entity.InvalidPilotStatus
 	}
 }

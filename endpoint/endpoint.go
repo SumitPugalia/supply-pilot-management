@@ -8,6 +8,12 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
+func MakeStatusEndpoint(s domain.Service) endpoint.Endpoint {
+	return func(_ context.Context, request interface{}) (interface{}, error) {
+		return Response{Data: "Success"}, nil
+	}
+}
+
 func MakeListPilotsEndpoint(s domain.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		v, err := s.ListPilots()
@@ -47,7 +53,7 @@ func MakeCreatePilotEndpoint(s domain.Service) endpoint.Endpoint {
 func MakeUpdatePilotEndpoint(s domain.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(UpdatePilotRequest)
-		pilot, err := s.UpdatePilot(domain.UpdatePilotParams(req))
+		pilot, err := s.UpdatePilot(req.Id, domain.UpdatePilotParams(req))
 		if err != nil {
 			return nil, err
 		}
@@ -55,10 +61,10 @@ func MakeUpdatePilotEndpoint(s domain.Service) endpoint.Endpoint {
 	}
 }
 
-func MakeChangeStatePilotEndpoint(s domain.Service) endpoint.Endpoint {
+func MakeChangePilotStatusEndpoint(s domain.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(ChangeStatePilotRequest)
-		pilot, err := s.ChangeStatePilot(req.Id, req.State)
+		req := request.(ChangePilotStatusRequest)
+		pilot, err := s.ChangePilotStatus(req.Id, req.Status)
 		if err != nil {
 			return nil, err
 		}

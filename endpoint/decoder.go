@@ -17,7 +17,7 @@ var (
 var VALIDATE = validator.New()
 
 type ListPilotsRequest struct{}
-
+type StatusRequest struct{}
 type GetPilotRequest struct {
 	Id string `json:"id"`
 }
@@ -43,9 +43,14 @@ type UpdatePilotRequest struct {
 	ServiceId  string `json:"serviceId" validate:"required"`
 }
 
-type ChangeStatePilotRequest struct {
-	Id    string `json:"id"`
-	State string `json:"state"`
+type ChangePilotStatusRequest struct {
+	Id     string `json:"id"`
+	Status string `json:"status"`
+}
+
+func DecodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var request StatusRequest
+	return request, nil
 }
 
 func DecodeListPilotsRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -94,17 +99,17 @@ func DecodeUpdatePilotRequest(_ context.Context, r *http.Request) (request inter
 	return req, nil
 }
 
-func DecodeChangeStatePilotRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
+func DecodeChangePilotStatusRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
-	state, okk := vars["state"]
+	status, okk := vars["status"]
 	if !ok || !okk {
 		return nil, ErrBadRequest
 	}
 
-	var req ChangeStatePilotRequest
+	var req ChangePilotStatusRequest
 	req.Id = id
-	req.State = state
+	req.Status = status
 	return req, nil
 }
 

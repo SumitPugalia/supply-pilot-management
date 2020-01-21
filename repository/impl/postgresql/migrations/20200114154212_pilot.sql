@@ -1,12 +1,13 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE pilots (id VARCHAR PRIMARY KEY,
-	user_id VARCHAR,
-	supplier_id VARCHAR,
-	market_id VARCHAR,
-	service_id VARCHAR,
-	code_name VARCHAR,
-	state VARCHAR,
+CREATE TABLE pilots (
+	id TEXT PRIMARY KEY,
+	user_id TEXT,
+	supplier_id TEXT,
+	market_id TEXT,
+	service_id TEXT,
+	code_name TEXT,
+	status TEXT,
 	created_at timestamp,
 	updated_at timestamp,
 	deleted boolean
