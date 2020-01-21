@@ -25,11 +25,32 @@ func (s ServiceImpl) GetPilot(id string) (entity.Pilot, error) {
 }
 
 func (s ServiceImpl) CreatePilot(params domain.CreatePilotParams) (entity.Pilot, error) {
-	return s.pilotRepo.CreatePilot(params)
+	now := time.Now()
+	pilot := entity.Pilot{
+		UserId:     params.UserId,
+		CodeName:   params.CodeName,
+		SupplierId: params.SupplierId,
+		Status:     "IDLE",
+		MarketId:   params.MarketId,
+		ServiceId:  params.ServiceId,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+	return s.pilotRepo.CreatePilot(pilot)
 }
 
 func (s ServiceImpl) UpdatePilot(id string, params domain.UpdatePilotParams) (entity.Pilot, error) {
-	return s.pilotRepo.UpdatePilot(id, params)
+	pilot, err := s.pilotRepo.GetPilot(id)
+	if err != nil {
+		return entity.Pilot{}, err
+	}
+	pilot.UserId = params.UserId
+	pilot.CodeName = params.CodeName
+	pilot.SupplierId = params.SupplierId
+	pilot.MarketId = params.MarketId
+	pilot.ServiceId = params.ServiceId
+	pilot.UpdatedAt = time.Now()
+	return s.pilotRepo.UpdatePilot(id, pilot)
 }
 
 func (s ServiceImpl) DeletePilot(id string) error {
@@ -51,4 +72,9 @@ func (s ServiceImpl) ChangePilotStatus(id string, status string) (entity.Pilot, 
 	default:
 		return entity.Pilot{}, entity.InvalidPilotStatus
 	}
+}
+
+func genUUID() string {
+	id := guuid.New()
+	return id.String()
 }

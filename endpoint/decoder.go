@@ -19,11 +19,11 @@ var VALIDATE = validator.New()
 type ListPilotsRequest struct{}
 type StatusRequest struct{}
 type GetPilotRequest struct {
-	Id string `json:"id"`
+	Id string `json:"id" validate:"required"`
 }
 
 type DeletePilotRequest struct {
-	Id string `json:"id"`
+	Id string `json:"id" validate:"required"`
 }
 
 type CreatePilotRequest struct {

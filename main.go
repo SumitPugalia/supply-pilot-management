@@ -81,7 +81,7 @@ func assignRoutes(router *mux.Router) *mux.Router {
 	router.Handle("/supply/pilots", listPilotsHandler).Methods("GET")
 	router.Handle("/supply/pilots/{id}", getPilotHandler).Methods("GET")
 	router.Handle("/supply/pilots", CreatePilotHandler).Methods("POST")
-	router.Handle("/supply/pilots/{id}", UpdatePilotHandler).Methods("PUT")
+	router.Handle("/supply/pilots/{id}", UpdatePilotHandler).Methods("PATCH")
 	router.Handle("/supply/pilots/{id}", DeletePilotHandler).Methods("DELETE")
 	router.Handle("/supply/pilots/{id}/{status}", ChangePilotStatusHandler).Methods("PATCH")
 	return router
