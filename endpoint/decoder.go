@@ -19,11 +19,11 @@ var VALIDATE = validator.New()
 type ListPilotsRequest struct{}
 type StatusRequest struct{}
 type GetPilotRequest struct {
-	Id string `json:"id"`
+	Id string `json:"id" validate:"required"`
 }
 
 type DeletePilotRequest struct {
-	Id string `json:"id"`
+	Id string `json:"id" validate:"required"`
 }
 
 type CreatePilotRequest struct {
@@ -44,8 +44,8 @@ type UpdatePilotRequest struct {
 }
 
 type ChangePilotStatusRequest struct {
-	Id     string `json:"id"`
-	Status string `json:"status"`
+	Id     string `json:"id" validate:"required"`
+	Status string `json:"status" validate:"required"`
 }
 
 func DecodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
