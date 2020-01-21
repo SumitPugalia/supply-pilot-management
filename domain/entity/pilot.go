@@ -2,6 +2,7 @@ package entity
 
 import "time"
 
+// pilot struct for the entity
 type Pilot struct {
 	Id         string
 	UserId     string
@@ -17,6 +18,7 @@ type Pilot struct {
 
 type PilotStatus string
 
+// all possible pilot status
 const (
 	IdlePilotStatus    PilotStatus = "IDLE"
 	ActivePilotStatus  PilotStatus = "ACTIVE"

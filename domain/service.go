@@ -2,6 +2,7 @@ package domain
 
 import "gitlab.intelligentb.com/cafu/supply/pilot-management/domain/entity"
 
+// list of service interfaces
 type Service interface {
 	ListPilots() ([]entity.Pilot, error)
 	GetPilot(id string) (entity.Pilot, error)

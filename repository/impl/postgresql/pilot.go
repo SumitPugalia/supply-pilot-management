@@ -14,6 +14,7 @@ type PilotRepo struct {
 	writeConn sqlbuilder.Database
 }
 
+// pilot struct for database
 type Pilot struct {
 	Id         string             `db:"id"`
 	UserId     string             `db:"user_id"`
@@ -34,6 +35,7 @@ func MakePostgresPilotRepo() PilotRepo {
 	}
 }
 
+// list all the pilots
 func (repo *PilotRepo) ListPilots() ([]entity.Pilot, error) {
 	resultSet := make([]Pilot, 0)
 	err := repo.readConn.Collection("pilots").Find(db.Cond{"deleted =": false}).All(&resultSet)
@@ -47,6 +49,7 @@ func (repo *PilotRepo) ListPilots() ([]entity.Pilot, error) {
 	return pilots, nil
 }
 
+// get the detail of the pilot
 func (repo *PilotRepo) GetPilot(id string) (entity.Pilot, error) {
 	var pilot Pilot
 	err := repo.readConn.Collection("pilots").Find(db.Cond{"id =": id, "deleted =": false}).One(&pilot)
@@ -59,6 +62,7 @@ func (repo *PilotRepo) GetPilot(id string) (entity.Pilot, error) {
 	return entity.Pilot(pilot), nil
 }
 
+// create the pilot
 func (repo *PilotRepo) CreatePilot(entity_pilot entity.Pilot) (entity.Pilot, error) {
 	pilot := Pilot(entity_pilot)
 	_, err := repo.writeConn.Collection("pilots").Insert(pilot)
@@ -69,6 +73,7 @@ func (repo *PilotRepo) CreatePilot(entity_pilot entity.Pilot) (entity.Pilot, err
 	return entity_pilot, nil
 }
 
+// update the detail of the pilot
 func (repo *PilotRepo) UpdatePilot(id string, entity_pilot entity.Pilot) (entity.Pilot, error) {
 	pilot := Pilot(entity_pilot)
 	res := repo.writeConn.Collection("pilots").Find("id", id)

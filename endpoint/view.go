@@ -4,6 +4,7 @@ import (
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain/entity"
 )
 
+// pilot struct for representation of pilot for response
 type PilotView struct {
 	Id         string `json:"id"`
 	UserId     string `json:"user_id"`

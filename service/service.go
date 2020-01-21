@@ -19,14 +19,17 @@ func MakeServiceImpl() ServiceImpl {
 	return ServiceImpl{pilotRepo: &pilotRepo}
 }
 
+// it returns the list of all the pilots
 func (s ServiceImpl) ListPilots() ([]entity.Pilot, error) {
 	return s.pilotRepo.ListPilots()
 }
 
+// it returns the details of the pilot identified by the id
 func (s ServiceImpl) GetPilot(id string) (entity.Pilot, error) {
 	return s.pilotRepo.GetPilot(id)
 }
 
+// it creates the pilot as the params received
 func (s ServiceImpl) CreatePilot(params domain.CreatePilotParams) (entity.Pilot, error) {
 	now := time.Now()
 	pilot := entity.Pilot{
@@ -44,6 +47,7 @@ func (s ServiceImpl) CreatePilot(params domain.CreatePilotParams) (entity.Pilot,
 	return s.pilotRepo.CreatePilot(pilot)
 }
 
+// it updates detail of the pilot as the new params received
 func (s ServiceImpl) UpdatePilot(id string, params domain.UpdatePilotParams) (entity.Pilot, error) {
 	pilot, err := s.pilotRepo.GetPilot(id)
 	if err != nil {
@@ -58,6 +62,7 @@ func (s ServiceImpl) UpdatePilot(id string, params domain.UpdatePilotParams) (en
 	return s.pilotRepo.UpdatePilot(id, pilot)
 }
 
+// it soft deletes the pilot identified by id
 func (s ServiceImpl) DeletePilot(id string) error {
 	pilot, err := s.pilotRepo.GetPilot(id)
 	if err != nil {
@@ -68,6 +73,7 @@ func (s ServiceImpl) DeletePilot(id string) error {
 	return err
 }
 
+// it changes the status of the pilot
 func (s ServiceImpl) ChangePilotStatus(id string, status string) (entity.Pilot, error) {
 	pilot, err := s.pilotRepo.GetPilot(id)
 	if err != nil {
@@ -83,6 +89,7 @@ func (s ServiceImpl) ChangePilotStatus(id string, status string) (entity.Pilot, 
 	return s.pilotRepo.UpdatePilot(id, pilot)
 }
 
+// list of the status pilot can hold
 func pilotStatus(status string) (entity.PilotStatus, error) {
 	switch status {
 	case "idle":
@@ -100,6 +107,7 @@ func pilotStatus(status string) (entity.PilotStatus, error) {
 	}
 }
 
+// generator function for uuid
 func genUUID() string {
 	id := guuid.New()
 	return id.String()
