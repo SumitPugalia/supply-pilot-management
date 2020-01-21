@@ -53,7 +53,7 @@ func MakeCreatePilotEndpoint(s domain.Service) endpoint.Endpoint {
 func MakeUpdatePilotEndpoint(s domain.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(UpdatePilotRequest)
-		pilot, err := s.UpdatePilot(req.Id, domain.UpdatePilotParams(req))
+		pilot, err := s.UpdatePilot(req.Id, update_pilot_params(req))
 		if err != nil {
 			return nil, err
 		}
@@ -80,5 +80,15 @@ func MakeDeletePilotEndpoint(s domain.Service) endpoint.Endpoint {
 			return nil, err
 		}
 		return Response{Data: nil}, nil
+	}
+}
+
+func update_pilot_params(req UpdatePilotRequest) domain.UpdatePilotParams {
+	return domain.UpdatePilotParams{
+		UserId:     req.UserId,
+		CodeName:   req.CodeName,
+		SupplierId: req.SupplierId,
+		MarketId:   req.MarketId,
+		ServiceId:  req.ServiceId,
 	}
 }

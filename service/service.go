@@ -1,6 +1,9 @@
 package service
 
 import (
+	"time"
+
+	guuid "github.com/google/uuid"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain/entity"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/repository"
@@ -27,6 +30,7 @@ func (s ServiceImpl) GetPilot(id string) (entity.Pilot, error) {
 func (s ServiceImpl) CreatePilot(params domain.CreatePilotParams) (entity.Pilot, error) {
 	now := time.Now()
 	pilot := entity.Pilot{
+		Id:         genUUID(),
 		UserId:     params.UserId,
 		CodeName:   params.CodeName,
 		SupplierId: params.SupplierId,
@@ -35,6 +39,7 @@ func (s ServiceImpl) CreatePilot(params domain.CreatePilotParams) (entity.Pilot,
 		ServiceId:  params.ServiceId,
 		CreatedAt:  now,
 		UpdatedAt:  now,
+		Deleted:    false,
 	}
 	return s.pilotRepo.CreatePilot(pilot)
 }
@@ -54,23 +59,44 @@ func (s ServiceImpl) UpdatePilot(id string, params domain.UpdatePilotParams) (en
 }
 
 func (s ServiceImpl) DeletePilot(id string) error {
-	return s.pilotRepo.DeletePilot(id)
+	pilot, err := s.pilotRepo.GetPilot(id)
+	if err != nil {
+		return err
+	}
+	pilot.Deleted = true
+	_, err = s.pilotRepo.UpdatePilot(id, pilot)
+	return err
 }
 
 func (s ServiceImpl) ChangePilotStatus(id string, status string) (entity.Pilot, error) {
+	pilot, err := s.pilotRepo.GetPilot(id)
+	if err != nil {
+		return entity.Pilot{}, err
+	}
+
+	pilotStatus, err := pilotStatus(status)
+	if err != nil {
+		return entity.Pilot{}, err
+	}
+	pilot.Status = pilotStatus
+	pilot.UpdatedAt = time.Now()
+	return s.pilotRepo.UpdatePilot(id, pilot)
+}
+
+func pilotStatus(status string) (entity.PilotStatus, error) {
 	switch status {
 	case "idle":
-		return s.pilotRepo.ChangePilotStatus(id, entity.IdlePilotStatus)
+		return entity.IdlePilotStatus, nil
 	case "active":
-		return s.pilotRepo.ChangePilotStatus(id, entity.ActivePilotStatus)
+		return entity.ActivePilotStatus, nil
 	case "offduty":
-		return s.pilotRepo.ChangePilotStatus(id, entity.OffDutyPilotStatus)
+		return entity.OffDutyPilotStatus, nil
 	case "break":
-		return s.pilotRepo.ChangePilotStatus(id, entity.BreakPilotStatus)
+		return entity.BreakPilotStatus, nil
 	case "suspend":
-		return s.pilotRepo.ChangePilotStatus(id, entity.SuspendPilotStatus)
+		return entity.SuspendPilotStatus, nil
 	default:
-		return entity.Pilot{}, entity.InvalidPilotStatus
+		return entity.IdlePilotStatus, entity.InvalidPilotStatus
 	}
 }
 

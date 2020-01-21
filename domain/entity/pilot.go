@@ -12,6 +12,7 @@ type Pilot struct {
 	Status     PilotStatus
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
+	Deleted    bool
 }
 
 type PilotStatus string

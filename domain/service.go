@@ -20,7 +20,6 @@ type CreatePilotParams struct {
 }
 
 type UpdatePilotParams struct {
-	Id         string
 	UserId     string
 	CodeName   string
 	SupplierId string

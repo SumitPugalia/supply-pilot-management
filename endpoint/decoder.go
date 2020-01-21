@@ -44,8 +44,8 @@ type UpdatePilotRequest struct {
 }
 
 type ChangePilotStatusRequest struct {
-	Id     string `json:"id"`
-	Status string `json:"status"`
+	Id     string `json:"id" validate:"required"`
+	Status string `json:"status" validate:"required"`
 }
 
 func DecodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
