@@ -1,6 +1,9 @@
 package service
 
 import (
+	"time"
+
+	guuid "github.com/google/uuid"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain/entity"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/repository"

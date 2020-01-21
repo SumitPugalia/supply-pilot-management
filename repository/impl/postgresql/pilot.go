@@ -15,16 +15,16 @@ type PilotRepo struct {
 }
 
 type Pilot struct {
-	Id         string    `db:"id"`
-	UserId     string    `db:"user_id"`
-	CodeName   string    `db:"code_name"`
-	SupplierId string    `db:"supplier_id"`
-	MarketId   string    `db:"market_id"`
-	ServiceId  string    `db:"service_id"`
-	Status     string    `db:"status"`
-	CreatedAt  time.Time `db:"created_at"`
-	UpdatedAt  time.Time `db:"updated_at"`
-	Deleted    bool      `db:"deleted"`
+	Id         string             `db:"id,omitempty"`
+	UserId     string             `db:"user_id"`
+	CodeName   string             `db:"code_name"`
+	SupplierId string             `db:"supplier_id"`
+	MarketId   string             `db:"market_id"`
+	ServiceId  string             `db:"service_id"`
+	Status     entity.PilotStatus `db:"status"`
+	CreatedAt  time.Time          `db:"created_at"`
+	UpdatedAt  time.Time          `db:"updated_at"`
+	Deleted    bool               `db:"deleted"`
 }
 
 func MakePostgresPilotRepo() PilotRepo {
