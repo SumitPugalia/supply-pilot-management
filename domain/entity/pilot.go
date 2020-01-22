@@ -4,13 +4,13 @@ import "time"
 
 // pilot struct for the entity
 type Pilot struct {
-	Id         string
-	UserId     string
-	CodeName   string
-	SupplierId string
-	MarketId   string
-	ServiceId  string
-	Status     PilotStatus
+	Id         string      `json:"id"`
+	UserId     string      `json:"user_id"`
+	CodeName   string      `json:"code_name"`
+	SupplierId string      `json:"supplier_id"`
+	MarketId   string      `json:"market_id"`
+	ServiceId  string      `json:"service_id"`
+	Status     PilotStatus `json:"status"`
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	Deleted    bool

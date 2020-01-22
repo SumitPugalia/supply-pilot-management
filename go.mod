@@ -3,6 +3,7 @@ module gitlab.intelligentb.com/cafu/supply/pilot-management
 go 1.13
 
 require (
+	github.com/DATA-DOG/godog v0.7.13
 	github.com/go-kit/kit v0.9.0
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/go-playground/validator/v10 v10.1.0
