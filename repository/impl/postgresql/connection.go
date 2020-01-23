@@ -7,8 +7,8 @@ import (
 
 func openConn() sqlbuilder.Database {
 	connSettings := postgresql.ConnectionURL{
-		User:     "postgres",
-		Password: "postgres",
+		User:     "",
+		Password: "",
 		Host:     "localhost",
 		Socket:   "",
 		Database: "pilot_management",

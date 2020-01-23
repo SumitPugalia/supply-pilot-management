@@ -20,6 +20,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the service is hosted$`, isServiceHosted)
 	s.Step(`^the user sends a request to "([^"]*)" with body$`, sendRequestWithBody)
 	s.Step(`^the response should be (\d+)$`, validateStatusCode)
-	s.Step(`^the response should have the input data$`, validateResponseBody)
 	s.Step(`^the response should have the error message$`, validateResponseErrorBody)
+	s.Step(`^a Pilot is present in the system$`, aPilotIsPresentInTheSystem)
+	s.Step(`^the user sends a request to "([^"]*)"$`, sendRequest)
+	s.Step(`^the response should have the requested pilot data$`, validateResponseBody)
 }

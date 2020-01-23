@@ -15,7 +15,7 @@ Feature: Create Pilot
         }
         """
         Then the response should be 200
-        And the response should have the input data
+        And the response should have the requested pilot data
 
     @error
     Scenario Outline: Create pilot request with invalid request
