@@ -19,9 +19,27 @@ func MakeServiceImpl() ServiceImpl {
 	return ServiceImpl{pilotRepo: &pilotRepo}
 }
 
-// it returns the list of all the pilots
-func (s ServiceImpl) ListPilots() ([]entity.Pilot, error) {
-	return s.pilotRepo.ListPilots()
+// it returns the list of all the pilots with the filters and the pagination
+
+func (s ServiceImpl) ListPilots(params domain.ListPilotParams) ([]entity.Pilot, uint, uint, error) {
+	var status entity.PilotStatus
+	var err error
+	if params.Status != "" {
+		status, err = pilotStatus(params.Status)
+		if err != nil {
+			return []entity.Pilot{}, 0, 0, err
+		}
+	}
+
+	return s.pilotRepo.ListPilots(
+		params.SupplierId,
+		params.MarketId,
+		params.ServiceId,
+		params.CodeName,
+		status,
+		params.Page,
+		params.PageSize,
+	)
 }
 
 // it returns the details of the pilot identified by the id

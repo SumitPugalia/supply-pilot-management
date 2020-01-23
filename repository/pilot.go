@@ -5,7 +5,13 @@ import (
 )
 
 type PilotRepo interface {
-	ListPilots() ([]entity.Pilot, error)
+	ListPilots(supplierId string,
+		marketId string,
+		serviceId string,
+		codeName string,
+		status entity.PilotStatus,
+		page uint,
+		pageSize uint) ([]entity.Pilot, uint, uint, error)
 	GetPilot(id string) (entity.Pilot, error)
 	CreatePilot(entity_pilot entity.Pilot) (entity.Pilot, error)
 	UpdatePilot(id string, entity_pilot entity.Pilot) (entity.Pilot, error)

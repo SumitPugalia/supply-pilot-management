@@ -7,17 +7,17 @@ import (
 // pilot struct for representation of pilot for response
 type PilotView struct {
 	Id         string `json:"id"`
-	UserId     string `json:"user_id"`
-	CodeName   string `json:"code_name"`
-	SupplierId string `json:"supplier_id"`
-	MarketId   string `json:"market_id"`
-	ServiceId  string `json:"service_id"`
+	UserId     string `json:"userId"`
+	CodeName   string `json:"codeName"`
+	SupplierId string `json:"supplierId"`
+	MarketId   string `json:"marketId"`
+	ServiceId  string `json:"serviceId"`
 	Status     string `json:"status"`
-	CreatedAt  int64  `json:"created_at"`
-	UpdatedAt  int64  `json:"updated_at"`
+	CreatedAt  int64  `json:"createdAt"`
+	UpdatedAt  int64  `json:"updatedAt"`
 }
 
-func toPilotView(pilot entity.Pilot) PilotView {
+func ToPilotView(pilot entity.Pilot) PilotView {
 	return PilotView{
 		Id:         pilot.Id,
 		UserId:     pilot.UserId,
@@ -29,4 +29,12 @@ func toPilotView(pilot entity.Pilot) PilotView {
 		CreatedAt:  pilot.CreatedAt.Unix(),
 		UpdatedAt:  pilot.UpdatedAt.Unix(),
 	}
+}
+
+func ToPilotViews(pilots []entity.Pilot) []PilotView {
+	views := make([]PilotView, 0)
+	for _, pilot := range pilots {
+		views = append(views, ToPilotView(pilot))
+	}
+	return views
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -12,12 +13,21 @@ import (
 
 var (
 	ErrBadRequest = errors.New("bad request")
+	VALIDATE      = validator.New()
 )
 
-var VALIDATE = validator.New()
+type ListPilotsRequest struct {
+	SupplierId string `json:"supplierId"`
+	MarketId   string `json:"marketId"`
+	ServiceId  string `json:"serviceId"`
+	CodeName   string `json:"codeName"`
+	Status     string `json:"status"`
+	Page       uint   `json:"page"`
+	PageSize   uint   `json:"pageSize"`
+}
 
-type ListPilotsRequest struct{}
 type StatusRequest struct{}
+
 type GetPilotRequest struct {
 	Id string `json:"id" validate:"required"`
 }
@@ -54,7 +64,34 @@ func DecodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error
 }
 
 func DecodeListPilotsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var request ListPilotsRequest
+	var err error
+	var page, pageSize uint64
+	pageQuery := r.URL.Query().Get("page")
+	if pageQuery != "" {
+		page, err = strconv.ParseUint(pageQuery, 10, 32)
+	}
+
+	pageSizeQuery := r.URL.Query().Get("pageSize")
+	if pageSizeQuery != "" {
+		pageSize, err = strconv.ParseUint(pageSizeQuery, 10, 32)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	request := ListPilotsRequest{
+		SupplierId: r.URL.Query().Get("supplierId"),
+		MarketId:   r.URL.Query().Get("marketId"),
+		ServiceId:  r.URL.Query().Get("serviceId"),
+		CodeName:   r.URL.Query().Get("codeName"),
+		Status:     r.URL.Query().Get("status"),
+		Page:       uint(page),
+		PageSize:   uint(pageSize),
+	}
+	err = validateReq(request)
+	if err != nil {
+		return nil, err
+	}
 	return request, nil
 }
 
@@ -69,12 +106,12 @@ func DecodeGetPilotRequest(_ context.Context, r *http.Request) (interface{}, err
 
 func DecodeCreatePilotRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	var req CreatePilotRequest
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
 	}
-	er := validateReq(req)
-	if er != nil {
-		return nil, er
+	err = validateReq(req)
+	if err != nil {
+		return nil, err
 	}
 	return req, nil
 }
@@ -87,13 +124,13 @@ func DecodeUpdatePilotRequest(_ context.Context, r *http.Request) (request inter
 	}
 
 	var req UpdatePilotRequest
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
 	}
 	req.Id = id
-	er := validateReq(req)
-	if er != nil {
-		return nil, er
+	err = validateReq(req)
+	if err != nil {
+		return nil, err
 	}
 
 	return req, nil

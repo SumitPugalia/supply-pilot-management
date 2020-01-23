@@ -16,15 +16,16 @@ func MakeStatusEndpoint(s domain.Service) endpoint.Endpoint {
 
 func MakeListPilotsEndpoint(s domain.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		v, err := s.ListPilots()
+		req := request.(ListPilotsRequest)
+		pilots, totalEntries, totalPages, err := s.ListPilots(domain.ListPilotParams(req))
+
 		if err != nil {
 			return nil, err
 		}
-		pilots := make([]PilotView, 0)
-		for _, pilot := range v {
-			pilots = append(pilots, toPilotView(pilot))
-		}
-		return Response{Data: pilots}, nil
+		return Response{
+			Data:       ToPilotViews(pilots),
+			Pagination: PaginationData(totalEntries, totalPages),
+		}, nil
 	}
 }
 
@@ -35,7 +36,7 @@ func MakeGetPilotEndpoint(s domain.Service) endpoint.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		return Response{Data: toPilotView(pilot)}, nil
+		return Response{Data: ToPilotView(pilot)}, nil
 	}
 }
 
@@ -46,7 +47,7 @@ func MakeCreatePilotEndpoint(s domain.Service) endpoint.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		return Response{Data: toPilotView(pilot)}, nil
+		return Response{Data: ToPilotView(pilot)}, nil
 	}
 }
 
@@ -57,7 +58,7 @@ func MakeUpdatePilotEndpoint(s domain.Service) endpoint.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		return Response{Data: toPilotView(pilot)}, nil
+		return Response{Data: ToPilotView(pilot)}, nil
 	}
 }
 
@@ -68,7 +69,7 @@ func MakeChangePilotStatusEndpoint(s domain.Service) endpoint.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		return Response{Data: toPilotView(pilot)}, nil
+		return Response{Data: ToPilotView(pilot)}, nil
 	}
 }
 

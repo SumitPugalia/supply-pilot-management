@@ -4,7 +4,7 @@ import "gitlab.intelligentb.com/cafu/supply/pilot-management/domain/entity"
 
 // list of service interfaces
 type Service interface {
-	ListPilots() ([]entity.Pilot, error)
+	ListPilots(params ListPilotParams) ([]entity.Pilot, uint, uint, error)
 	GetPilot(id string) (entity.Pilot, error)
 	CreatePilot(params CreatePilotParams) (entity.Pilot, error)
 	UpdatePilot(id string, params UpdatePilotParams) (entity.Pilot, error)
@@ -26,4 +26,14 @@ type UpdatePilotParams struct {
 	SupplierId string
 	MarketId   string
 	ServiceId  string
+}
+
+type ListPilotParams struct {
+	SupplierId string
+	MarketId   string
+	ServiceId  string
+	CodeName   string
+	Status     string
+	Page       uint
+	PageSize   uint
 }
