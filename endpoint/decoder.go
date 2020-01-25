@@ -1,5 +1,11 @@
 package endpoint
 
+//------------------------------------------------------------
+// This file contains all the requests type that our system
+// expect, functions to convert the http request to our system
+// request type and run the validations on the attributes
+//-------------------------------------------------------------
+
 import (
 	"context"
 	"encoding/json"
@@ -11,10 +17,22 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//------------------------------------------------------------
+// Constants:
+// 	BadRequestError - malformed request
+//  VALIDATE        - instance of 'validate' with sane defaults.
+//-------------------------------------------------------------
+
 var (
-	ErrBadRequest = errors.New("bad request")
-	VALIDATE      = validator.New()
+	BadRequestError = errors.New("bad request")
+	VALIDATE        = validator.New()
 )
+
+//------------------------------------------------------------
+//	Valid Request Types that our system expects.
+//  We can use our validator logic for each of the attributes
+//	of the request
+//-------------------------------------------------------------
 
 type ListPilotsRequest struct {
 	SupplierId string `json:"supplierId"`
@@ -58,6 +76,13 @@ type ChangePilotStatusRequest struct {
 	Status string `json:"status" validate:"required"`
 }
 
+//------------------------------------------------------------
+//	Functions to Decode / Map the request to Valid Request Types.
+//  It intakes two paramters context and http request
+//  Responds with interface{} that is one of Request Type
+//  or error incase of invalid http request received
+//-------------------------------------------------------------
+
 func DecodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var request StatusRequest
 	return request, nil
@@ -99,7 +124,7 @@ func DecodeGetPilotRequest(_ context.Context, r *http.Request) (interface{}, err
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if !ok {
-		return nil, ErrBadRequest
+		return nil, BadRequestError
 	}
 	return GetPilotRequest{Id: id}, nil
 }
@@ -120,7 +145,7 @@ func DecodeUpdatePilotRequest(_ context.Context, r *http.Request) (request inter
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if !ok {
-		return nil, ErrBadRequest
+		return nil, BadRequestError
 	}
 
 	var req UpdatePilotRequest
@@ -141,7 +166,7 @@ func DecodeChangePilotStatusRequest(_ context.Context, r *http.Request) (request
 	id, ok := vars["id"]
 	status, okk := vars["status"]
 	if !ok || !okk {
-		return nil, ErrBadRequest
+		return nil, BadRequestError
 	}
 
 	var req ChangePilotStatusRequest
@@ -154,10 +179,14 @@ func DecodeDeletePilotRequest(_ context.Context, r *http.Request) (interface{}, 
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if !ok {
-		return nil, ErrBadRequest
+		return nil, BadRequestError
 	}
 	return DeletePilotRequest{Id: id}, nil
 }
+
+//------------------------------------------------------------
+//	Private function to check the validations
+//-------------------------------------------------------------
 
 func validateReq(req interface{}) error {
 	err := VALIDATE.Struct(req)

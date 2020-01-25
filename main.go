@@ -1,20 +1,22 @@
 package main
 
+//------------------------------------------------------------
+// This is the main file that contains the router.
+//-------------------------------------------------------------
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain/entity"
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/endpoint"
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/service"
+	"pilot-management/endpoint"
+	"pilot-management/service/impl"
 
 	httpTransport "github.com/go-kit/kit/transport/http"
-	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
+//------------------------------------------------------------
+// This is the entry/starting point of our application.
+//-------------------------------------------------------------
 func main() {
 	router := mux.NewRouter()
 	assignRoutes(router)
@@ -23,10 +25,13 @@ func main() {
 	http.ListenAndServe(":8080", nil)
 }
 
+//------------------------------------------------------------
+// Routers that maps the routes to the endpoints for our system.
+//-------------------------------------------------------------
 func assignRoutes(router *mux.Router) *mux.Router {
-	service := service.MakeServiceImpl()
+	service := impl.MakeServiceImpl()
 	options := []httpTransport.ServerOption{
-		httpTransport.ServerErrorEncoder(encodeErrorResponse),
+		httpTransport.ServerErrorEncoder(endpoint.EncodeErrorResponse),
 	}
 
 	statusHandler := httpTransport.NewServer(
@@ -85,38 +90,4 @@ func assignRoutes(router *mux.Router) *mux.Router {
 	router.Handle("/supply/pilots/{id}", DeletePilotHandler).Methods("DELETE")
 	router.Handle("/supply/pilots/{id}/{status}", ChangePilotStatusHandler).Methods("PATCH")
 	return router
-}
-
-func encodeErrorResponse(_ context.Context, err error, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	if errs, ok := err.(validator.ValidationErrors); ok {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(endpoint.Response{Errors: encodeV10Errors(errs)})
-		return
-	}
-
-	statusCode := codeFrom(err)
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(endpoint.Response{Errors: []string{err.Error()}})
-}
-
-func codeFrom(err error) int {
-	switch err {
-	case endpoint.ErrBadRequest,
-		entity.InvalidPilotStatus:
-		return http.StatusBadRequest
-	case entity.PilotDoesNotExistError:
-		return http.StatusNotFound
-	default:
-		return http.StatusInternalServerError
-	}
-}
-
-func encodeV10Errors(errs validator.ValidationErrors) []string {
-	var errorsSlice []string
-	for _, err := range errs {
-		errorsSlice = append(errorsSlice, err.Field()+":"+err.Tag())
-	}
-	return errorsSlice
 }

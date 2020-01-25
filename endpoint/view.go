@@ -1,10 +1,14 @@
 package endpoint
 
-import (
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain/entity"
-)
+import "pilot-management/domain"
 
-// pilot struct for representation of pilot for response
+//------------------------------------------------------------
+// This file contains view or the presentation of the response.
+//-------------------------------------------------------------
+
+//------------------------------------------------------------
+// PilotView struct for representation of pilot for response.
+//-------------------------------------------------------------
 type PilotView struct {
 	Id         string `json:"id"`
 	UserId     string `json:"userId"`
@@ -17,7 +21,7 @@ type PilotView struct {
 	UpdatedAt  int64  `json:"updatedAt"`
 }
 
-func ToPilotView(pilot entity.Pilot) PilotView {
+func ToPilotView(pilot domain.Pilot) PilotView {
 	return PilotView{
 		Id:         pilot.Id,
 		UserId:     pilot.UserId,
@@ -31,7 +35,7 @@ func ToPilotView(pilot entity.Pilot) PilotView {
 	}
 }
 
-func ToPilotViews(pilots []entity.Pilot) []PilotView {
+func ToPilotViews(pilots []domain.Pilot) []PilotView {
 	views := make([]PilotView, 0)
 	for _, pilot := range pilots {
 		views = append(views, ToPilotView(pilot))
