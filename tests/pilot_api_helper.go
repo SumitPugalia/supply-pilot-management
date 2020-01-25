@@ -12,8 +12,6 @@ import (
 	"pilot-management/domain"
 	"pilot-management/endpoint"
 
-	router "pilot-management/router"
-
 	"github.com/DATA-DOG/godog/gherkin"
 )
 
@@ -172,5 +170,5 @@ func compareReqWithResponse(req endpoint.CreatePilotRequest, resp domain.Pilot) 
 }
 
 func startApp(port string) {
-	router.StartApp(port)
+	endpoint.StartApp(port)
 }

@@ -1,6 +1,6 @@
 package main
 
-import "pilot-management/router"
+import "pilot-management/endpoint"
 
 //------------------------------------------------------------
 // This is the main file that starts the application.
@@ -10,5 +10,5 @@ import "pilot-management/router"
 // This is the entry/starting point of our application.
 //-------------------------------------------------------------
 func main() {
-	router.StartApp(":8080")
+	endpoint.StartApp(":8080")
 }
