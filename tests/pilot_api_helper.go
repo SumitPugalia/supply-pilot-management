@@ -9,10 +9,12 @@ import (
 	"net/http"
 	"strings"
 
+	"pilot-management/domain"
+	"pilot-management/endpoint"
+
+	router "pilot-management/router"
+
 	"github.com/DATA-DOG/godog/gherkin"
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain/entity"
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/endpoint"
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/pilotmanagement"
 )
 
 const (
@@ -32,7 +34,7 @@ var (
 	response      *http.Response
 	responseBody  string
 	decodedBody   endpoint.Response
-	decodedPilot  entity.Pilot
+	decodedPilot  domain.Pilot
 )
 
 // isServiceHosted checks if the server is already running
@@ -96,11 +98,11 @@ func validateResponseErrorBody(errorMessage *gherkin.DocString) error {
 		return err
 	}
 
-	errs := strings.Split(errorMessage.Content,",")
+	errs := strings.Split(errorMessage.Content, ",")
 
-	for i,v := range errs {
-		if v != decodedBody.Errors[i]{
-			return fmt.Errorf("the error response is not matching the requested body. want:%s,got:%s",v,decodedBody.Errors[i])
+	for i, v := range errs {
+		if v != decodedBody.Errors[i] {
+			return fmt.Errorf("the error response is not matching the requested body. want:%s,got:%s", v, decodedBody.Errors[i])
 		}
 	}
 
@@ -145,7 +147,7 @@ func decodeBody() error {
 
 func decodeBodyAsPilot() error {
 	var happyBody struct {
-		Data   entity.Pilot `json:"data"`
+		Data   domain.Pilot `json:"data"`
 		Errors []string     `json:"errors"`
 	}
 	if err := json.NewDecoder(strings.NewReader(responseBody)).Decode(&happyBody); err != nil {
@@ -159,7 +161,7 @@ func loadRequestAsStruct(pilot interface{}) error {
 	return json.NewDecoder(getGherkinStringAsReader(requestBody)).Decode(pilot)
 }
 
-func compareReqWithResponse(req endpoint.CreatePilotRequest, resp entity.Pilot) bool {
+func compareReqWithResponse(req endpoint.CreatePilotRequest, resp domain.Pilot) bool {
 	return req.UserId == resp.UserId &&
 		req.CodeName == resp.CodeName &&
 		req.SupplierId == resp.SupplierId &&
@@ -170,5 +172,5 @@ func compareReqWithResponse(req endpoint.CreatePilotRequest, resp entity.Pilot) 
 }
 
 func startApp(port string) {
-	pilotmanagement.StartApp(port)
+	router.StartApp(port)
 }
