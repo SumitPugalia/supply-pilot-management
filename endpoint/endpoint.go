@@ -1,23 +1,29 @@
 package endpoint
 
+//------------------------------------------------------------
+// This file contains controller for the endpoints.
+//-------------------------------------------------------------
 import (
 	"context"
 
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
+	"pilot-management/service"
 
 	"github.com/go-kit/kit/endpoint"
 )
 
-func MakeStatusEndpoint(s domain.Service) endpoint.Endpoint {
+//------------------------------------------------------------
+// All the controllers mapped to the routes
+//-------------------------------------------------------------
+func MakeStatusEndpoint(s service.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		return Response{Data: "Success"}, nil
 	}
 }
 
-func MakeListPilotsEndpoint(s domain.Service) endpoint.Endpoint {
+func MakeListPilotsEndpoint(s service.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(ListPilotsRequest)
-		pilots, totalEntries, totalPages, err := s.ListPilots(domain.ListPilotParams(req))
+		pilots, totalEntries, totalPages, err := s.ListPilots(service.ListPilotParams(req))
 
 		if err != nil {
 			return nil, err
@@ -29,7 +35,7 @@ func MakeListPilotsEndpoint(s domain.Service) endpoint.Endpoint {
 	}
 }
 
-func MakeGetPilotEndpoint(s domain.Service) endpoint.Endpoint {
+func MakeGetPilotEndpoint(s service.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(GetPilotRequest)
 		pilot, err := s.GetPilot(req.Id)
@@ -40,10 +46,10 @@ func MakeGetPilotEndpoint(s domain.Service) endpoint.Endpoint {
 	}
 }
 
-func MakeCreatePilotEndpoint(s domain.Service) endpoint.Endpoint {
+func MakeCreatePilotEndpoint(s service.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(CreatePilotRequest)
-		pilot, err := s.CreatePilot(domain.CreatePilotParams(req))
+		pilot, err := s.CreatePilot(service.CreatePilotParams(req))
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +57,7 @@ func MakeCreatePilotEndpoint(s domain.Service) endpoint.Endpoint {
 	}
 }
 
-func MakeUpdatePilotEndpoint(s domain.Service) endpoint.Endpoint {
+func MakeUpdatePilotEndpoint(s service.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(UpdatePilotRequest)
 		pilot, err := s.UpdatePilot(req.Id, update_pilot_params(req))
@@ -62,7 +68,7 @@ func MakeUpdatePilotEndpoint(s domain.Service) endpoint.Endpoint {
 	}
 }
 
-func MakeChangePilotStatusEndpoint(s domain.Service) endpoint.Endpoint {
+func MakeChangePilotStatusEndpoint(s service.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(ChangePilotStatusRequest)
 		pilot, err := s.ChangePilotStatus(req.Id, req.Status)
@@ -73,7 +79,7 @@ func MakeChangePilotStatusEndpoint(s domain.Service) endpoint.Endpoint {
 	}
 }
 
-func MakeDeletePilotEndpoint(s domain.Service) endpoint.Endpoint {
+func MakeDeletePilotEndpoint(s service.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(DeletePilotRequest)
 		err := s.DeletePilot(req.Id)
@@ -84,8 +90,11 @@ func MakeDeletePilotEndpoint(s domain.Service) endpoint.Endpoint {
 	}
 }
 
-func update_pilot_params(req UpdatePilotRequest) domain.UpdatePilotParams {
-	return domain.UpdatePilotParams{
+//------------------------------------------------------------
+// Internal helper function
+//-------------------------------------------------------------
+func update_pilot_params(req UpdatePilotRequest) service.UpdatePilotParams {
+	return service.UpdatePilotParams{
 		UserId:     req.UserId,
 		CodeName:   req.CodeName,
 		SupplierId: req.SupplierId,

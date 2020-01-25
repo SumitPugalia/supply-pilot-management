@@ -1,9 +1,12 @@
 package postgresql
 
+//------------------------------------------------------------
+// This file contains the implementation of the repo interface.
+//-------------------------------------------------------------
 import (
 	"time"
 
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain/entity"
+	"pilot-management/domain"
 
 	"upper.io/db.v3"
 	"upper.io/db.v3/lib/sqlbuilder"
@@ -14,7 +17,9 @@ type PilotRepo struct {
 	writeConn sqlbuilder.Database
 }
 
-// pilot struct for database
+//------------------------------------------------------------
+// Pilot struct for database.
+//-------------------------------------------------------------
 type Pilot struct {
 	Id         string             `db:"id"`
 	UserId     string             `db:"user_id"`
@@ -22,7 +27,7 @@ type Pilot struct {
 	SupplierId string             `db:"supplier_id"`
 	MarketId   string             `db:"market_id"`
 	ServiceId  string             `db:"service_id"`
-	Status     entity.PilotStatus `db:"status"`
+	Status     domain.PilotStatus `db:"status"`
 	CreatedAt  time.Time          `db:"created_at"`
 	UpdatedAt  time.Time          `db:"updated_at"`
 	Deleted    bool               `db:"deleted"`
@@ -35,18 +40,24 @@ func MakePostgresPilotRepo() PilotRepo {
 	}
 }
 
-// list all the pilots
+//------------------------------------------------------------
+// List all the pilots based on the filters and the pagination.
+// Updates the pilot information for the id provided.
+// Parameter: supplierId, marketId, serviceId, codeName, status,
+//            page and pageSize
+// Response: list of domain.Pilot, total entries, total pages, error
+//-------------------------------------------------------------
 func (repo *PilotRepo) ListPilots(
 	supplierId string,
 	marketId string,
 	serviceId string,
 	codeName string,
-	status entity.PilotStatus,
+	status domain.PilotStatus,
 	page uint,
-	pageSize uint) ([]entity.Pilot, uint, uint, error) {
+	pageSize uint) ([]domain.Pilot, uint, uint, error) {
 
 	rows := make([]Pilot, 0)
-	pilots := make([]entity.Pilot, 0)
+	pilots := make([]domain.Pilot, 0)
 
 	query := repo.readConn.Collection("pilots").Find(db.Cond{"deleted": false})
 	query = query.Paginate(pageSize).Page(page)
@@ -70,49 +81,61 @@ func (repo *PilotRepo) ListPilots(
 	totalPages, err := query.TotalPages()
 	if err != nil {
 		if err == db.ErrNoMoreRows {
-			return []entity.Pilot{}, 0, 0, entity.PilotDoesNotExistError
+			return []domain.Pilot{}, 0, 0, domain.PilotDoesNotExistError
 		}
 		return pilots, 0, 0, err
 	}
 	for _, pilot := range rows {
-		pilots = append(pilots, entity.Pilot(pilot))
+		pilots = append(pilots, domain.Pilot(pilot))
 	}
 	return pilots, uint(totalEntries), totalPages, nil
 }
 
-// get the detail of the pilot
-func (repo *PilotRepo) GetPilot(id string) (entity.Pilot, error) {
+//------------------------------------------------------------
+// Get the pilot information for the id provided.
+// Parameter: id
+// Response: domain.Pilot or error
+//-------------------------------------------------------------
+func (repo *PilotRepo) GetPilot(id string) (domain.Pilot, error) {
 	var pilot Pilot
 	err := repo.readConn.Collection("pilots").Find(db.Cond{"id =": id, "deleted =": false}).One(&pilot)
 	if err != nil {
 		if err == db.ErrNoMoreRows {
-			return entity.Pilot{}, entity.PilotDoesNotExistError
+			return domain.Pilot{}, domain.PilotDoesNotExistError
 		}
-		return entity.Pilot{}, err
+		return domain.Pilot{}, err
 	}
-	return entity.Pilot(pilot), nil
+	return domain.Pilot(pilot), nil
 }
 
-// create the pilot
-func (repo *PilotRepo) CreatePilot(entity_pilot entity.Pilot) (entity.Pilot, error) {
-	pilot := Pilot(entity_pilot)
+//------------------------------------------------------------
+// Create the pilot.
+// Parameter: domain.Pilot
+// Response: domain.Pilot or error
+//-------------------------------------------------------------
+func (repo *PilotRepo) CreatePilot(domain_pilot domain.Pilot) (domain.Pilot, error) {
+	pilot := Pilot(domain_pilot)
 	_, err := repo.writeConn.Collection("pilots").Insert(pilot)
 	if err != nil {
-		return entity.Pilot{}, err
+		return domain.Pilot{}, err
 	}
 
-	return entity_pilot, nil
+	return domain_pilot, nil
 }
 
-// update the detail of the pilot
-func (repo *PilotRepo) UpdatePilot(id string, entity_pilot entity.Pilot) (entity.Pilot, error) {
-	pilot := Pilot(entity_pilot)
+//------------------------------------------------------------
+// Updates the pilot information for the id provided.
+// Parameter: id, domain.Pilot
+// Response: domain.Pilot or error
+//-------------------------------------------------------------
+func (repo *PilotRepo) UpdatePilot(id string, domain_pilot domain.Pilot) (domain.Pilot, error) {
+	pilot := Pilot(domain_pilot)
 	res := repo.writeConn.Collection("pilots").Find("id", id)
 	err := res.Update(pilot)
 
 	if err != nil {
-		return entity.Pilot{}, err
+		return domain.Pilot{}, err
 	}
 
-	return entity_pilot, nil
+	return domain_pilot, nil
 }
