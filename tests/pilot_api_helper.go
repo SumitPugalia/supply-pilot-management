@@ -1,19 +1,20 @@
 package tests
 
 import (
+	"math/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
+	"pilot-management/endpoint"
+	"pilot-management/pilotmanagement"
+
 	"github.com/DATA-DOG/godog/gherkin"
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/endpoint"
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/pilotmanagement"
 )
 
 const (
@@ -136,7 +137,6 @@ func sendRequestWithBody(requestName string, body *gherkin.DocString) error {
 	response, err = sendFunc()
 	return err
 }
-
 func validateResponseErrorBody(errorMessage *gherkin.DocString) error {
 	if err := decodeBody(); err != nil {
 		log.Println("Failed to decode body", err)
@@ -153,7 +153,6 @@ func validateResponseErrorBody(errorMessage *gherkin.DocString) error {
 
 	return nil
 }
-
 func validateResponseBody() error {
 	if err := decodeBody(); err != nil {
 		log.Println("Failed to decode body", err)
