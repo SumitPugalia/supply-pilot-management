@@ -41,5 +41,5 @@ Feature: Update Pilot
         Examples:
             | uid | code | sid | mid | serid | errorMessage                                                                                |
             | ""  | ""   | ""  | ""  | ""    | UserId:required,CodeName:required,SupplierId:required,MarketId:required,ServiceId:required  |
-            | 123 | "SAD"| "A" | "W" | "2"   | json: cannot unmarshal number into Go struct field CreatePilotRequest.userId of type string |
+            | 123 | "SAD"| "A" | "W" | "2"   | userId Expected string But Got number |
 

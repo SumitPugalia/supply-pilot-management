@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"pilot-management/domain"
 
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 )
 
 //------------------------------------------------------------
@@ -45,6 +45,13 @@ func EncodeErrorResponse(_ context.Context, err error, w http.ResponseWriter) {
 		json.NewEncoder(w).Encode(Response{Errors: encodeV10Errors(errs)})
 		return
 	}
+
+	if e, k := err.(*json.UnmarshalTypeError); k {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Errors: encodeUnmarshalTypeErrors(e)})
+		return
+	}
+
 	statusCode := codeFrom(err)
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(Response{Errors: []string{err.Error()}})
@@ -83,4 +90,9 @@ func encodeV10Errors(errs validator.ValidationErrors) []string {
 		errorsSlice = append(errorsSlice, err.Field()+":"+err.Tag())
 	}
 	return errorsSlice
+}
+
+func encodeUnmarshalTypeErrors(e *json.UnmarshalTypeError) []string {
+	msg := e.Field + " Expected " + e.Type.String() + " But Got " + e.Value
+	return []string{msg}
 }
