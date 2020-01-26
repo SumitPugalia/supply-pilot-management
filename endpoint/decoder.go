@@ -163,7 +163,9 @@ func DecodeGetPilotRequest(_ context.Context, r *http.Request) (interface{}, err
 
 func DecodeCreatePilotRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	var req CreatePilotRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&req); err != nil {
 		return nil, err
 	}
 	err = validateReq(req)
@@ -186,7 +188,9 @@ func DecodeUpdatePilotRequest(_ context.Context, r *http.Request) (request inter
 	}
 
 	var req UpdatePilotRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&req); err != nil {
 		return nil, err
 	}
 	req.Id = Id

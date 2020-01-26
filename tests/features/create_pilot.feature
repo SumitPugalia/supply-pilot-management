@@ -7,11 +7,11 @@ Feature: Create Pilot
         When the user sends a request to "createPilot" with body
         """
         {
-        	"userId" : "mraj89",
+        	"userId" : "f8590d99-4e29-46be-a39a-8aa9574bcb2b",
         	"codeName" : "Mohanraj",
-        	"supplierId" : "Sup123",
-        	"marketId" : "Mar123",
-        	"serviceId" : "Serv123"
+        	"supplierId" : "f8590d99-4e29-46be-a39a-8aa9574bcb2b",
+        	"marketId" : "f8590d99-4e29-46be-a39a-8aa9574bcb2b",
+        	"serviceId" : "f8590d99-4e29-46be-a39a-8aa9574bcb2b"
         }
         """
         Then the response should be 200
@@ -38,5 +38,6 @@ Feature: Create Pilot
         
         Examples:
             | uid | code | sid | mid | serid | errorMessage                                                                                |
-            | ""  | ""   | ""  | ""  | ""    | UserId:required,CodeName:required,SupplierId:required,MarketId:required,ServiceId:required  |
-            | 123 | "SAD"| "A" | "W" | "2"   | userId Expected string But Got number |
+            | ""  | ""   | ""  | ""  | ""    | bad request |
+            | 123 | "SAD"| "A" | "W" | "2"   | bad request |
+            | "123" | "SAD"| "A" | "W" | "2"   | bad request |

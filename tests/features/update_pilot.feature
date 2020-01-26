@@ -8,11 +8,9 @@ Feature: Update Pilot
         When the user sends a request to "updatePilot" with body
         """
         {
-        	"userId" : "updateUser",
         	"codeName" : "updateCode",
-        	"supplierId" : "updateSupplier",
-        	"marketId" : "updatemarket",
-        	"serviceId" : "updateservice"
+        	"marketId" : "a535dfef-e5c2-4d2e-ac17-041581cd8471",
+        	"serviceId" : "a535dfef-e5c2-4d2e-ac17-041581cd8471"
         }
         """
         Then the response should be 200
@@ -38,5 +36,5 @@ Feature: Update Pilot
         
         Examples:
             | code | mid | serid | errorMessage                                                                                |
-            | "A" | 123 | "2"   | marketId Expected string But Got number |
+            | "A" | 123 | "2"   | bad request |
 

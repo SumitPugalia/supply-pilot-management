@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"pilot-management/domain"
+	"regexp"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -30,7 +31,7 @@ type Pagination struct {
 }
 
 //------------------------------------------------------------
-//	Functions to encode the success/error response.
+//	Functions to encode the success response.
 //-------------------------------------------------------------
 
 func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
@@ -38,24 +39,37 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 	return json.NewEncoder(w).Encode(response)
 }
 
+//------------------------------------------------------------
+//	Functions to encode the error response.
+//-------------------------------------------------------------
+
 func EncodeErrorResponse(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	if errs, ok := err.(validator.ValidationErrors); ok {
+	switch err.(type) {
+	case validator.ValidationErrors:
+		errs, _ := err.(validator.ValidationErrors)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(Response{Errors: encodeV10Errors(errs)})
 		return
-	}
-
-	if e, k := err.(*json.UnmarshalTypeError); k {
+	case *json.UnmarshalTypeError:
+		errs, _ := err.(*json.UnmarshalTypeError)
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Errors: encodeUnmarshalTypeErrors(e)})
+		json.NewEncoder(w).Encode(Response{Errors: encodeUnmarshalTypeErrors(errs)})
+		return
+	default:
+		e := err.Error()
+		if checkForUUIDError(e) {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(Response{Errors: []string{BadRequestError.Error()}})
+			return
+		}
+
+		statusCode := codeFrom(err)
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(Response{Errors: []string{e}})
 		return
 	}
-
-	statusCode := codeFrom(err)
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(Response{Errors: []string{err.Error()}})
 }
 
 //------------------------------------------------------------
@@ -88,7 +102,7 @@ func codeFrom(err error) int {
 func encodeV10Errors(errs validator.ValidationErrors) []string {
 	var errorsSlice []string
 	for _, err := range errs {
-		errorsSlice = append(errorsSlice, err.Field()+":"+err.Tag())
+		errorsSlice = append(errorsSlice, toField(err.Field())+":"+err.Tag())
 	}
 	return errorsSlice
 }
@@ -96,4 +110,15 @@ func encodeV10Errors(errs validator.ValidationErrors) []string {
 func encodeUnmarshalTypeErrors(e *json.UnmarshalTypeError) []string {
 	msg := e.Field + " Expected " + e.Type.String() + " But Got " + e.Value
 	return []string{msg}
+}
+
+func toField(s string) string {
+	field := []byte(s)
+	field[0] = field[0] | ('a' - 'A')
+	return string(field)
+}
+
+func checkForUUIDError(err string) bool {
+	myRegex, _ := regexp.Compile("invalid UUID length *")
+	return myRegex.MatchString(err)
 }
