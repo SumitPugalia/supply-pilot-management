@@ -25,9 +25,7 @@ Feature: Update Pilot
         When the user sends a request to "updatePilot" with body
         """
         {
-        	"userId" : <uid>,
         	"codeName" : <code>,
-        	"supplierId" : <sid>,
         	"marketId" : <mid>,
         	"serviceId" : <serid>
         }
@@ -39,7 +37,6 @@ Feature: Update Pilot
         """
         
         Examples:
-            | uid | code | sid | mid | serid | errorMessage                                                                                |
-            | ""  | ""   | ""  | ""  | ""    | UserId:required,CodeName:required,SupplierId:required,MarketId:required,ServiceId:required  |
-            | 123 | "SAD"| "A" | "W" | "2"   | userId Expected string But Got number |
+            | code | mid | serid | errorMessage                                                                                |
+            | "A" | 123 | "2"   | marketId Expected string But Got number |
 

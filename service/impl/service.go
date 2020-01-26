@@ -87,13 +87,8 @@ func (s ServiceImpl) CreatePilot(params service.CreatePilotParams) (domain.Pilot
 // Response: domain.Pilot, error
 //-------------------------------------------------------------
 func (s ServiceImpl) UpdatePilot(id string, params service.UpdatePilotParams) (domain.Pilot, error) {
-	pilot, err := s.pilotRepo.GetPilot(id)
-	if err != nil {
-		return domain.Pilot{}, err
-	}
-	pilot.UserId = params.UserId
+	pilot := domain.Pilot{}
 	pilot.CodeName = params.CodeName
-	pilot.SupplierId = params.SupplierId
 	pilot.MarketId = params.MarketId
 	pilot.ServiceId = params.ServiceId
 	pilot.UpdatedAt = time.Now()
@@ -106,12 +101,10 @@ func (s ServiceImpl) UpdatePilot(id string, params service.UpdatePilotParams) (d
 // Response: error
 //-------------------------------------------------------------
 func (s ServiceImpl) DeletePilot(id string) error {
-	pilot, err := s.pilotRepo.GetPilot(id)
-	if err != nil {
-		return err
-	}
+	pilot := domain.Pilot{}
+	pilot.UpdatedAt = time.Now()
 	pilot.Deleted = true
-	_, err = s.pilotRepo.UpdatePilot(id, pilot)
+	_, err := s.pilotRepo.UpdatePilot(id, pilot)
 	return err
 }
 
@@ -121,15 +114,11 @@ func (s ServiceImpl) DeletePilot(id string) error {
 // Response: domain.Pilot, error
 //-------------------------------------------------------------
 func (s ServiceImpl) ChangePilotStatus(id string, status string) (domain.Pilot, error) {
-	pilot, err := s.pilotRepo.GetPilot(id)
-	if err != nil {
-		return domain.Pilot{}, err
-	}
-
 	pilotStatus, err := pilotStatus(status)
 	if err != nil {
 		return domain.Pilot{}, err
 	}
+	pilot := domain.Pilot{}
 	pilot.Status = pilotStatus
 	pilot.UpdatedAt = time.Now()
 	return s.pilotRepo.UpdatePilot(id, pilot)

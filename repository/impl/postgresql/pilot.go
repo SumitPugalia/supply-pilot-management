@@ -129,13 +129,42 @@ func (repo *PilotRepo) CreatePilot(domain_pilot domain.Pilot) (domain.Pilot, err
 // Response: domain.Pilot or error
 //-------------------------------------------------------------
 func (repo *PilotRepo) UpdatePilot(id string, domain_pilot domain.Pilot) (domain.Pilot, error) {
-	pilot := Pilot(domain_pilot)
-	res := repo.writeConn.Collection("pilots").Find("id", id)
-	err := res.Update(pilot)
+	updates := []interface{}{
+		"updated_at",
+		domain_pilot.UpdatedAt,
+	}
+	if len(domain_pilot.CodeName) > 0 {
+		updates = append(updates, "code_name", domain_pilot.CodeName)
+	}
+
+	if len(domain_pilot.MarketId) > 0 {
+		updates = append(updates, "market_id", domain_pilot.MarketId)
+	}
+
+	if len(domain_pilot.ServiceId) > 0 {
+		updates = append(updates, "service_id", domain_pilot.ServiceId)
+	}
+
+	if len(domain_pilot.Status) > 0 {
+		updates = append(updates, "status", domain_pilot.Status)
+	}
+
+	q := repo.writeConn.Update("pilots").Set(updates...).Where("id = ? AND deleted = ?", id, false)
+	res, err := q.Exec()
+
+	rows, _ := res.RowsAffected()
 
 	if err != nil {
 		return domain.Pilot{}, err
 	}
 
-	return domain_pilot, nil
+	if rows == 1 {
+		var pilot Pilot
+		err = repo.writeConn.Collection("pilots").Find(db.Cond{"id =": id, "deleted =": false}).One(&pilot)
+		if err != nil {
+			return domain.Pilot{}, err
+		}
+		return domain.Pilot(pilot), nil
+	}
+	return domain.Pilot{}, err
 }

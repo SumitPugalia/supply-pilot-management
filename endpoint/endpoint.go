@@ -95,10 +95,8 @@ func MakeDeletePilotEndpoint(s service.Service) endpoint.Endpoint {
 //-------------------------------------------------------------
 func update_pilot_params(req UpdatePilotRequest) service.UpdatePilotParams {
 	return service.UpdatePilotParams{
-		UserId:     req.UserId,
-		CodeName:   req.CodeName,
-		SupplierId: req.SupplierId,
-		MarketId:   req.MarketId,
-		ServiceId:  req.ServiceId,
+		CodeName:  req.CodeName,
+		MarketId:  req.MarketId,
+		ServiceId: req.ServiceId,
 	}
 }

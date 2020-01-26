@@ -63,12 +63,10 @@ type CreatePilotRequest struct {
 }
 
 type UpdatePilotRequest struct {
-	Id         string `json:"id" validate:"required"`
-	UserId     string `json:"userId" validate:"required"`
-	CodeName   string `json:"codeName" validate:"required"`
-	SupplierId string `json:"supplierId" validate:"required"`
-	MarketId   string `json:"marketId" validate:"required"`
-	ServiceId  string `json:"serviceId" validate:"required"`
+	Id        string `json:"id" validate:"required"`
+	CodeName  string `json:"codeName"`
+	MarketId  string `json:"marketId"`
+	ServiceId string `json:"serviceId"`
 }
 
 type ChangePilotStatusRequest struct {

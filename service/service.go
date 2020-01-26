@@ -27,11 +27,9 @@ type CreatePilotParams struct {
 }
 
 type UpdatePilotParams struct {
-	UserId     string
-	CodeName   string
-	SupplierId string
-	MarketId   string
-	ServiceId  string
+	CodeName  string
+	MarketId  string
+	ServiceId string
 }
 
 type ListPilotParams struct {
