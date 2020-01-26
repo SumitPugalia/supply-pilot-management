@@ -1,6 +1,10 @@
 package endpoint
 
-import "pilot-management/domain"
+import (
+	"pilot-management/domain"
+
+	guuid "github.com/google/uuid"
+)
 
 //------------------------------------------------------------
 // This file contains view or the presentation of the response.
@@ -10,15 +14,15 @@ import "pilot-management/domain"
 // PilotView struct for representation of pilot for response.
 //-------------------------------------------------------------
 type PilotView struct {
-	Id         string `json:"id"`
-	UserId     string `json:"userId"`
-	CodeName   string `json:"codeName"`
-	SupplierId string `json:"supplierId"`
-	MarketId   string `json:"marketId"`
-	ServiceId  string `json:"serviceId"`
-	Status     string `json:"status"`
-	CreatedAt  int64  `json:"createdAt"`
-	UpdatedAt  int64  `json:"updatedAt"`
+	Id         guuid.UUID `json:"id"`
+	UserId     guuid.UUID `json:"userId"`
+	CodeName   string     `json:"codeName"`
+	SupplierId guuid.UUID `json:"supplierId"`
+	MarketId   guuid.UUID `json:"marketId"`
+	ServiceId  guuid.UUID `json:"serviceId"`
+	Status     string     `json:"status"`
+	CreatedAt  int64      `json:"createdAt"`
+	UpdatedAt  int64      `json:"updatedAt"`
 }
 
 func ToPilotView(pilot domain.Pilot) PilotView {

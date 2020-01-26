@@ -3,18 +3,22 @@ package domain
 //------------------------------------------------------------
 // This file contains the domain model of pilot for our system.
 //-------------------------------------------------------------
-import "time"
+import (
+	"time"
+
+	guuid "github.com/google/uuid"
+)
 
 //------------------------------------------------------------
 // Pilot struct for the domain
 //-------------------------------------------------------------
 type Pilot struct {
-	Id         string
-	UserId     string
+	Id         guuid.UUID
+	UserId     guuid.UUID
 	CodeName   string
-	SupplierId string
-	MarketId   string
-	ServiceId  string
+	SupplierId guuid.UUID
+	MarketId   guuid.UUID
+	ServiceId  guuid.UUID
 	Status     PilotStatus
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
