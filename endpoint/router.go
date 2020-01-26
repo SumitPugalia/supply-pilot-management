@@ -20,7 +20,7 @@ func StartApp(port string) {
 	router := mux.NewRouter()
 	assignRoutes(router)
 	http.Handle("/", router)
-	fmt.Println("About to start the server at port 8080")
+	fmt.Println("About to start the server at port", port)
 	http.ListenAndServe(port, nil)
 }
 

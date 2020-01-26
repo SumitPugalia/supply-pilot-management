@@ -1,18 +1,16 @@
 package tests
 
 import (
-	"math/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
 	"pilot-management/endpoint"
-	"pilot-management/pilotmanagement"
 
 	"github.com/DATA-DOG/godog/gherkin"
 )
@@ -23,40 +21,28 @@ const (
 )
 
 const (
-	statusEndpoint = "/supply/pilots/status"
-	createEndpoint = "/supply/pilots"
-	updateEndpoint = "/supply/pilots/%s"
+	statusEndpoint    = "/supply/pilots/status"
+	createEndpoint    = "/supply/pilots"
+	pilotByIDEndpoint = "/supply/pilots/%s"
 )
 
-var (
+type pilotAPIHelper struct {
 	requestBody   *gherkin.DocString
 	requestRecord Request
 	response      *http.Response
-	responseBody  string
 	decodedBody   endpoint.Response
 	decodedPilot  endpoint.PilotView
-)
-
-// isServiceHosted checks if the server is already running
-// by sending a request to the status endpoint
-func isServiceHosted() error {
-	var err error
-	requestRecord := Request{
-		Method: "GET",
-		Uri:    host + port + statusEndpoint,
-		Body:   nil,
-		Header: nil,
-	}
-
-	response, err = requestRecord.Send()
-	if err != nil {
-		return err
-	}
-
-	return validateStatusCode(200)
 }
 
-func aPilotIsPresentInTheSystem() error {
+// NewPilotAPIHelper creates and returns a new pilot helper value
+func NewPilotAPIHelper() *pilotAPIHelper {
+	helper := new(pilotAPIHelper)
+	helper.response = new(http.Response)
+	helper.requestBody = new(gherkin.DocString)
+	return helper
+}
+
+func (step *pilotAPIHelper) aPilotIsPresentInTheSystem() error {
 	randData := fmt.Sprint(rand.Int())
 	gherkinDocString := gherkin.DocString{
 		Content: fmt.Sprintf(`{
@@ -68,141 +54,165 @@ func aPilotIsPresentInTheSystem() error {
         }`, randData, randData, randData, randData, randData),
 	}
 
-	requestBody = &gherkinDocString
-
-	return sendRequestWithBody("createPilot", requestBody)
+	return step.sendRequestWithBody("createPilot", &gherkinDocString)
 }
 
-func sendCreatePilotRequest() (*http.Response, error) {
+func (step *pilotAPIHelper) sendCreatePilotRequest() (*http.Response, error) {
 	req := Request{
 		Method: http.MethodPost,
 		Uri:    fmt.Sprint(host, port, createEndpoint),
-		Body:   getGherkinStringAsReader(requestBody),
+		Body:   getGherkinStringAsReader(step.requestBody),
 		Header: http.Header{"Content-Type": []string{"application/json"}},
 	}
 	return req.Send()
 }
 
-func sendUpdatePilotRequest() (*http.Response, error) {
-	req := Request{
-		Method: http.MethodPut,
-		Uri:    fmt.Sprintf("%s%s"+updateEndpoint, host, port, decodedPilot.Id),
-		Body:   getGherkinStringAsReader(requestBody),
-		Header: http.Header{"Content-Type": []string{"application/json"}},
-	}
-	return req.Send()
-}
-
-func sendGetPilotRequest() (*http.Response, error) {
-	if err := decodeBody(); err != nil {
+func (step *pilotAPIHelper) sendUpdatePilotRequest() (*http.Response, error) {
+	if err := step.decodeBodyAsPilot(); err != nil {
 		return nil, err
 	}
-	log.Println(fmt.Sprintf("%s%s"+updateEndpoint, host, port, decodedPilot.Id))
+
+	req := Request{
+		Method: http.MethodPatch,
+		Uri:    fmt.Sprintf("%s%s"+pilotByIDEndpoint, host, port, step.decodedPilot.Id),
+		Body:   getGherkinStringAsReader(step.requestBody),
+		Header: http.Header{"Content-Type": []string{"application/json"}},
+	}
+	return req.Send()
+}
+
+func (step *pilotAPIHelper) getPilotRequestValidID() error {
+	if err := step.decodeBodyAsPilot(); err != nil {
+		return err
+	}
+
+	resp, err := step.getPilotRequest(step.decodedPilot.Id)
+	if err != nil {
+		return err
+	}
+	step.rememberResponse(resp)
+	return nil
+}
+func (step *pilotAPIHelper) getPilotRequestInvalidID(invalidID string) error {
+
+	resp, err := step.getPilotRequest(invalidID)
+	if err != nil {
+		return err
+	}
+	step.rememberResponse(resp)
+	return nil
+}
+
+func (step *pilotAPIHelper) getPilotRequest(ID string) (*http.Response, error) {
+	//log.Println(fmt.Sprintf("%s%s"+updateEndpoint, host, port, decodedPilot.Id))
 	req := Request{
 		Method: http.MethodGet,
-		Uri:    fmt.Sprintf("%s%s"+updateEndpoint, host, port, decodedPilot.Id),
+		Uri:    fmt.Sprintf("%s%s"+pilotByIDEndpoint, host, port, ID),
 		Body:   nil,
 		Header: http.Header{"Content-Type": []string{"application/json"}},
 	}
 	return req.Send()
 }
 
-func sendRequest(requestName string) error {
-	var sendFunc func() (*http.Response, error)
-	var err error
-	switch requestName {
-	case "getPilot":
-		sendFunc = sendGetPilotRequest
-	default:
-		return errors.New("invalid endpoint request")
-	}
-	response, err = sendFunc()
+func (step *pilotAPIHelper) sendRequest(requestName string) error {
+	resp, err := step.determineRequestFunc(requestName)()
+	step.rememberResponse(resp)
 	return err
 }
 
-func sendRequestWithBody(requestName string, body *gherkin.DocString) error {
-	var sendFunc func() (*http.Response, error)
-	var err error
-	requestBody = body
-	switch requestName {
-	case "createPilot":
-		sendFunc = sendCreatePilotRequest
-	case "updatePilot":
-		sendFunc = sendUpdatePilotRequest
-	case "getPilot":
-		sendFunc = sendGetPilotRequest
-	default:
-		return errors.New("invalid endpoint request")
-	}
-	response, err = sendFunc()
+func (step *pilotAPIHelper) sendRequestWithBody(requestName string, body *gherkin.DocString) error {
+	step.rememberRequestBody(body)
+	resp, err := step.determineRequestFunc(requestName)()
+	step.rememberResponse(resp)
+
 	return err
 }
-func validateResponseErrorBody(errorMessage *gherkin.DocString) error {
-	if err := decodeBody(); err != nil {
+
+func (step *pilotAPIHelper) rememberRequestBody(body *gherkin.DocString) {
+	step.requestBody = body
+}
+
+func (step *pilotAPIHelper) rememberResponse(resp *http.Response) {
+	step.response = resp
+}
+
+func (step *pilotAPIHelper) determineRequestFunc(requestName string) func() (*http.Response, error) {
+	switch requestName {
+	case "createPilot":
+		return step.sendCreatePilotRequest
+	case "updatePilot":
+		return step.sendUpdatePilotRequest
+	default:
+		return func() (*http.Response, error) {
+			return nil, errors.New("invalid request name")
+		}
+	}
+}
+
+func (step *pilotAPIHelper) validateStatusCode(code int) error {
+	return validateStatusCode(step.response, code)
+}
+
+func (step *pilotAPIHelper) validateResponseErrorBody(errorMessage *gherkin.DocString) error {
+	if err := step.decodeBodyAsPilot(); err != nil {
 		log.Println("Failed to decode body", err)
 		return err
 	}
 
 	errs := strings.Split(errorMessage.Content, ",")
-
+	log.Printf("step decoded body %+v", step.decodedBody)
 	for i, v := range errs {
-		if v != decodedBody.Errors[i] {
-			return fmt.Errorf("the error response is not matching the requested body. want:%s,got:%s", v, decodedBody.Errors[i])
+		if v != step.decodedBody.Errors[i] {
+			return fmt.Errorf("the error response doesn't match. want:%s,got:%s", v, step.decodedBody.Errors[i])
 		}
 	}
 
 	return nil
 }
-func validateResponseBody() error {
-	if err := decodeBody(); err != nil {
+
+func (step *pilotAPIHelper) validateResponseBody() error {
+	if err := step.decodeBodyAsPilot(); err != nil {
 		log.Println("Failed to decode body", err)
 		return err
 	}
 
 	var requestValue endpoint.CreatePilotRequest
-	if err := loadRequestAsStruct(&requestValue); err != nil {
+	if err := step.loadRequestAsStruct(&requestValue); err != nil {
 		log.Println("Failed to decode request", err)
 		return err
 	}
 
-	if !compareReqWithResponse(requestValue, decodedPilot) {
+	if !compareReqWithResponse(requestValue, step.decodedPilot) {
 		log.Printf("Request: %+v\n", requestValue)
-		log.Printf("Decoded body: %+v\n", decodedBody)
-		log.Printf("Response: %+v\n", decodedPilot)
+		log.Printf("Decoded body: %+v\n", step.decodedBody)
+		log.Printf("Response: %+v\n", step.decodedPilot)
 		return errors.New("request and response are not equal")
 	}
 
 	return nil
 }
 
-func decodeBody() error {
-	bodyBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil
-	}
-	responseBody = string(bodyBytes)
-	log.Printf("Raw response body: %s", responseBody)
-
-	if err = json.NewDecoder(strings.NewReader(responseBody)).Decode(&decodedBody); err != nil {
+func (step *pilotAPIHelper) decodeBodyAsPilot() error {
+	happyBody := new(struct {
+		Data       endpoint.PilotView  `json:"data"`
+		Errors     []string            `json:"errors"`
+		Pagination endpoint.Pagination `json:"pagination"`
+	})
+	log.Println("Response: ", step.response)
+	if err := json.NewDecoder(step.response.Body).Decode(happyBody); err != nil {
 		return err
 	}
-	return decodeBodyAsPilot()
-}
-
-func decodeBodyAsPilot() error {
-	var happyBody struct {
-		Data   endpoint.PilotView `json:"data"`
-		Errors []string           `json:"errors"`
+	step.decodedBody = endpoint.Response{
+		Data:       happyBody.Data,
+		Errors:     happyBody.Errors,
+		Pagination: happyBody.Pagination,
 	}
-	if err := json.NewDecoder(strings.NewReader(responseBody)).Decode(&happyBody); err != nil {
-		return err
-	}
-	decodedPilot = happyBody.Data
+	step.decodedPilot = happyBody.Data
 	return nil
 }
 
-func loadRequestAsStruct(pilot interface{}) error {
-	return json.NewDecoder(getGherkinStringAsReader(requestBody)).Decode(pilot)
+func (step *pilotAPIHelper) loadRequestAsStruct(pilot interface{}) error {
+	return json.Unmarshal([]byte(step.requestBody.Content), pilot)
 }
 
 func compareReqWithResponse(req endpoint.CreatePilotRequest, resp endpoint.PilotView) bool {
@@ -216,5 +226,24 @@ func compareReqWithResponse(req endpoint.CreatePilotRequest, resp endpoint.Pilot
 }
 
 func startApp(port string) {
-	pilotmanagement.StartApp(port)
+	endpoint.StartApp(port)
+}
+
+// isServiceHosted checks if the server is already running
+// by sending a request to the status endpoint
+func isServiceHosted() error {
+	var err error
+	requestRecord := Request{
+		Method: http.MethodGet,
+		Uri:    host + port + statusEndpoint,
+		Body:   nil,
+		Header: nil,
+	}
+
+	resp, err := requestRecord.Send()
+	if err != nil {
+		return err
+	}
+
+	return validateStatusCode(resp, 200)
 }

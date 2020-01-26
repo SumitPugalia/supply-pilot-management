@@ -36,7 +36,7 @@ func getGherkinStringAsReader(gs *gherkin.DocString) io.Reader {
 	return strings.NewReader(gs.Content)
 }
 
-func validateStatusCode(expected int) error {
+func validateStatusCode(response *http.Response, expected int) error {
 	if response.StatusCode != expected {
 		return fmt.Errorf("status code did not match. want:%d got:%d", expected, response.StatusCode)
 	}
