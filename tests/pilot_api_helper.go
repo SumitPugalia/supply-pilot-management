@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -29,11 +30,12 @@ const (
 )
 
 type pilotAPIHelper struct {
-	requestBody   *gherkin.DocString
-	requestRecord Request
-	response      *http.Response
-	decodedBody   endpoint.Response
-	decodedPilot  endpoint.PilotView
+	requestBody      *gherkin.DocString
+	requestRecord    Request
+	response         *http.Response
+	decodedBody      endpoint.Response
+	decodedPilot     endpoint.PilotView
+	decodedPilotList []endpoint.PilotView
 }
 
 // NewPilotAPIHelper creates and returns a new pilot helper value
@@ -41,6 +43,7 @@ func NewPilotAPIHelper() *pilotAPIHelper {
 	helper := new(pilotAPIHelper)
 	helper.response = new(http.Response)
 	helper.requestBody = new(gherkin.DocString)
+	helper.decodedBody = *new(endpoint.Response)
 	return helper
 }
 
@@ -196,21 +199,20 @@ func (step *pilotAPIHelper) validateResponseBody() error {
 }
 
 func (step *pilotAPIHelper) decodeBodyAsPilot() error {
-	happyBody := new(struct {
-		Data       endpoint.PilotView  `json:"data"`
-		Errors     []string            `json:"errors"`
-		Pagination endpoint.Pagination `json:"pagination"`
-	})
 	log.Println("Response: ", step.response)
-	if err := json.NewDecoder(step.response.Body).Decode(happyBody); err != nil {
+	if err := json.NewDecoder(step.response.Body).Decode(&step.decodedBody); err != nil {
 		return err
 	}
-	step.decodedBody = endpoint.Response{
-		Data:       happyBody.Data,
-		Errors:     happyBody.Errors,
-		Pagination: happyBody.Pagination,
+
+	v := reflect.ValueOf(step.decodedBody.Data)
+	if v.Kind() == reflect.Slice {
+		pilotJSON, _ := json.Marshal(step.decodedBody.Data)
+		json.Unmarshal(pilotJSON, &step.decodedPilotList)
+	} else {
+		//step.decodedPilot = step.decodedBody.Data.(endpoint.PilotView)
+		pilotJSON, _ := json.Marshal(step.decodedBody.Data)
+		json.Unmarshal(pilotJSON, &step.decodedPilot)
 	}
-	step.decodedPilot = happyBody.Data
 	return nil
 }
 
