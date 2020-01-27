@@ -55,7 +55,7 @@ func (s ServiceImpl) ListPilots(params service.ListPilotParams) ([]domain.Pilot,
 // Parameter: id
 // Response: domain.Pilot, error
 //-------------------------------------------------------------
-func (s ServiceImpl) GetPilot(id string) (domain.Pilot, error) {
+func (s ServiceImpl) GetPilot(id guuid.UUID) (domain.Pilot, error) {
 	return s.pilotRepo.GetPilot(id)
 }
 
@@ -86,7 +86,7 @@ func (s ServiceImpl) CreatePilot(params service.CreatePilotParams) (domain.Pilot
 // Parameter: id, service.UpdatePilotParams
 // Response: domain.Pilot, error
 //-------------------------------------------------------------
-func (s ServiceImpl) UpdatePilot(id string, params service.UpdatePilotParams) (domain.Pilot, error) {
+func (s ServiceImpl) UpdatePilot(id guuid.UUID, params service.UpdatePilotParams) (domain.Pilot, error) {
 	pilot := domain.Pilot{}
 	pilot.CodeName = params.CodeName
 	pilot.MarketId = params.MarketId
@@ -100,7 +100,7 @@ func (s ServiceImpl) UpdatePilot(id string, params service.UpdatePilotParams) (d
 // Parameter: id
 // Response: error
 //-------------------------------------------------------------
-func (s ServiceImpl) DeletePilot(id string) error {
+func (s ServiceImpl) DeletePilot(id guuid.UUID) error {
 	pilot := domain.Pilot{}
 	pilot.UpdatedAt = time.Now()
 	pilot.Deleted = true
@@ -113,7 +113,7 @@ func (s ServiceImpl) DeletePilot(id string) error {
 // Parameter: id, status
 // Response: domain.Pilot, error
 //-------------------------------------------------------------
-func (s ServiceImpl) ChangePilotStatus(id string, status string) (domain.Pilot, error) {
+func (s ServiceImpl) ChangePilotStatus(id guuid.UUID, status string) (domain.Pilot, error) {
 	pilotStatus, err := pilotStatus(status)
 	if err != nil {
 		return domain.Pilot{}, err
@@ -148,7 +148,7 @@ func pilotStatus(status string) (domain.PilotStatus, error) {
 //------------------------------------------------------------
 // Internal/Helper function to create uuid.
 //-------------------------------------------------------------
-func genUUID() string {
+func genUUID() guuid.UUID {
 	id := guuid.New()
-	return id.String()
+	return id
 }

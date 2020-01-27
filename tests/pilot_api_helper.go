@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	guuid "github.com/google/uuid"
+
 	"pilot-management/endpoint"
 
 	"github.com/DATA-DOG/godog/gherkin"
@@ -44,6 +46,7 @@ func NewPilotAPIHelper() *pilotAPIHelper {
 
 func (step *pilotAPIHelper) aPilotIsPresentInTheSystem() error {
 	randData := fmt.Sprint(rand.Int())
+	randUUID := guuid.New()
 	gherkinDocString := gherkin.DocString{
 		Content: fmt.Sprintf(`{
         	"userId" : "%s",
@@ -51,7 +54,7 @@ func (step *pilotAPIHelper) aPilotIsPresentInTheSystem() error {
         	"supplierId" : "%s",
         	"marketId" : "%s",
         	"serviceId" : "%s"
-        }`, randData, randData, randData, randData, randData),
+        }`, randUUID, randData, randUUID, randUUID, randUUID),
 	}
 
 	return step.sendRequestWithBody("createPilot", &gherkinDocString)
@@ -93,9 +96,9 @@ func (step *pilotAPIHelper) getPilotRequestValidID() error {
 	step.rememberResponse(resp)
 	return nil
 }
-func (step *pilotAPIHelper) getPilotRequestInvalidID(invalidID string) error {
+func (step *pilotAPIHelper) getPilotRequestInvalidID() error {
 
-	resp, err := step.getPilotRequest(invalidID)
+	resp, err := step.getPilotRequest(guuid.New())
 	if err != nil {
 		return err
 	}
@@ -103,7 +106,7 @@ func (step *pilotAPIHelper) getPilotRequestInvalidID(invalidID string) error {
 	return nil
 }
 
-func (step *pilotAPIHelper) getPilotRequest(ID string) (*http.Response, error) {
+func (step *pilotAPIHelper) getPilotRequest(ID guuid.UUID) (*http.Response, error) {
 	//log.Println(fmt.Sprintf("%s%s"+updateEndpoint, host, port, decodedPilot.Id))
 	req := Request{
 		Method: http.MethodGet,
@@ -219,6 +222,14 @@ func compareReqWithResponse(req endpoint.CreatePilotRequest, resp endpoint.Pilot
 	return req.UserId == resp.UserId &&
 		req.CodeName == resp.CodeName &&
 		req.SupplierId == resp.SupplierId &&
+		req.MarketId == resp.MarketId &&
+		req.ServiceId == resp.ServiceId &&
+		time.Unix(resp.UpdatedAt, 0).After(time.Now().Add(time.Second*-10)) &&
+		time.Unix(resp.CreatedAt, 0).After(time.Now().Add(time.Second*-20))
+}
+
+func compareUpdateReqWithResponse(req endpoint.UpdatePilotRequest, resp endpoint.PilotView) bool {
+	return req.CodeName == resp.CodeName &&
 		req.MarketId == resp.MarketId &&
 		req.ServiceId == resp.ServiceId &&
 		time.Unix(resp.UpdatedAt, 0).After(time.Now().Add(time.Second*-10)) &&

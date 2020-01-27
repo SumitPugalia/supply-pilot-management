@@ -1,11 +1,11 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE pilots (
-  id TEXT PRIMARY KEY,
-  user_id TEXT,
-  supplier_id TEXT,
-  market_id TEXT,
-  service_id TEXT,
+  id uuid PRIMARY KEY,
+  user_id uuid,
+  supplier_id uuid,
+  market_id uuid,
+  service_id uuid,
   code_name TEXT,
   status TEXT,
   created_at timestamp,

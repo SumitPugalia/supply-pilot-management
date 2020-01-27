@@ -8,8 +8,13 @@ import (
 
 	"pilot-management/domain"
 
+	guuid "github.com/google/uuid"
 	"upper.io/db.v3"
 	"upper.io/db.v3/lib/sqlbuilder"
+)
+
+const (
+	tableName = "pilots"
 )
 
 type PilotRepo struct {
@@ -21,12 +26,12 @@ type PilotRepo struct {
 // Pilot struct for database.
 //-------------------------------------------------------------
 type Pilot struct {
-	Id         string             `db:"id"`
-	UserId     string             `db:"user_id"`
+	Id         guuid.UUID         `db:"id"`
+	UserId     guuid.UUID         `db:"user_id"`
 	CodeName   string             `db:"code_name"`
-	SupplierId string             `db:"supplier_id"`
-	MarketId   string             `db:"market_id"`
-	ServiceId  string             `db:"service_id"`
+	SupplierId guuid.UUID         `db:"supplier_id"`
+	MarketId   guuid.UUID         `db:"market_id"`
+	ServiceId  guuid.UUID         `db:"service_id"`
 	Status     domain.PilotStatus `db:"status"`
 	CreatedAt  time.Time          `db:"created_at"`
 	UpdatedAt  time.Time          `db:"updated_at"`
@@ -48,9 +53,9 @@ func MakePostgresPilotRepo() PilotRepo {
 // Response: list of domain.Pilot, total entries, total pages, error
 //-------------------------------------------------------------
 func (repo *PilotRepo) ListPilots(
-	supplierId string,
-	marketId string,
-	serviceId string,
+	supplierId guuid.UUID,
+	marketId guuid.UUID,
+	serviceId guuid.UUID,
 	codeName string,
 	status domain.PilotStatus,
 	page uint,
@@ -59,15 +64,18 @@ func (repo *PilotRepo) ListPilots(
 	rows := make([]Pilot, 0)
 	pilots := make([]domain.Pilot, 0)
 
-	query := repo.readConn.Collection("pilots").Find(db.Cond{"deleted": false})
+	query := repo.readConn.Collection(tableName).Find(db.Cond{"deleted": false})
 	query = query.Paginate(pageSize).Page(page)
-	if supplierId != "" {
+
+	Nil := guuid.UUID{}
+
+	if supplierId != Nil {
 		query = query.And(db.Cond{"supplier_id": supplierId})
 	}
-	if marketId != "" {
+	if marketId != Nil {
 		query = query.And(db.Cond{"market_id": marketId})
 	}
-	if serviceId != "" {
+	if serviceId != Nil {
 		query = query.And(db.Cond{"service_id": serviceId})
 	}
 	if codeName != "" {
@@ -96,9 +104,9 @@ func (repo *PilotRepo) ListPilots(
 // Parameter: id
 // Response: domain.Pilot or error
 //-------------------------------------------------------------
-func (repo *PilotRepo) GetPilot(id string) (domain.Pilot, error) {
+func (repo *PilotRepo) GetPilot(id guuid.UUID) (domain.Pilot, error) {
 	var pilot Pilot
-	err := repo.readConn.Collection("pilots").Find(db.Cond{"id =": id, "deleted =": false}).One(&pilot)
+	err := repo.readConn.Collection(tableName).Find(db.Cond{"id =": id, "deleted =": false}).One(&pilot)
 	if err != nil {
 		if err == db.ErrNoMoreRows {
 			return domain.Pilot{}, domain.PilotDoesNotExistError
@@ -115,7 +123,7 @@ func (repo *PilotRepo) GetPilot(id string) (domain.Pilot, error) {
 //-------------------------------------------------------------
 func (repo *PilotRepo) CreatePilot(domain_pilot domain.Pilot) (domain.Pilot, error) {
 	pilot := Pilot(domain_pilot)
-	_, err := repo.writeConn.Collection("pilots").Insert(pilot)
+	_, err := repo.writeConn.Collection(tableName).Insert(pilot)
 	if err != nil {
 		return domain.Pilot{}, err
 	}
@@ -128,25 +136,32 @@ func (repo *PilotRepo) CreatePilot(domain_pilot domain.Pilot) (domain.Pilot, err
 // Parameter: id, domain.Pilot
 // Response: domain.Pilot or error
 //-------------------------------------------------------------
-func (repo *PilotRepo) UpdatePilot(id string, domain_pilot domain.Pilot) (domain.Pilot, error) {
+func (repo *PilotRepo) UpdatePilot(id guuid.UUID, domain_pilot domain.Pilot) (domain.Pilot, error) {
 	updates := []interface{}{
 		"updated_at",
 		domain_pilot.UpdatedAt,
 	}
+
+	Nil := guuid.UUID{}
+
 	if len(domain_pilot.CodeName) > 0 {
 		updates = append(updates, "code_name", domain_pilot.CodeName)
 	}
 
-	if len(domain_pilot.MarketId) > 0 {
+	if domain_pilot.MarketId != Nil {
 		updates = append(updates, "market_id", domain_pilot.MarketId)
 	}
 
-	if len(domain_pilot.ServiceId) > 0 {
+	if domain_pilot.ServiceId != Nil {
 		updates = append(updates, "service_id", domain_pilot.ServiceId)
 	}
 
 	if len(domain_pilot.Status) > 0 {
 		updates = append(updates, "status", domain_pilot.Status)
+	}
+
+	if domain_pilot.Deleted {
+		updates = append(updates, "deleted", domain_pilot.Deleted)
 	}
 
 	q := repo.writeConn.Update("pilots").Set(updates...).Where("id = ? AND deleted = ?", id, false)
@@ -160,11 +175,12 @@ func (repo *PilotRepo) UpdatePilot(id string, domain_pilot domain.Pilot) (domain
 
 	if rows == 1 {
 		var pilot Pilot
-		err = repo.writeConn.Collection("pilots").Find(db.Cond{"id =": id, "deleted =": false}).One(&pilot)
-		if err != nil {
+		err = repo.writeConn.Collection(tableName).Find(db.Cond{"id =": id, "deleted =": false}).One(&pilot)
+		if err != nil && !domain_pilot.Deleted {
 			return domain.Pilot{}, err
 		}
 		return domain.Pilot(pilot), nil
 	}
-	return domain.Pilot{}, err
+
+	return domain.Pilot{}, domain.PilotDoesNotExistError
 }
