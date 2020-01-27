@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -29,18 +30,22 @@ const (
 )
 
 type pilotAPIHelper struct {
-	requestBody   *gherkin.DocString
-	requestRecord Request
-	response      *http.Response
-	decodedBody   endpoint.Response
-	decodedPilot  endpoint.PilotView
+	requestBody      endpoint.CreatePilotRequest
+	requestRaw       *gherkin.DocString
+	requestObj       Request
+	response         *http.Response
+	decodedBody      endpoint.Response
+	decodedPilot     endpoint.PilotView
+	decodedPilotList []endpoint.PilotView
 }
 
 // NewPilotAPIHelper creates and returns a new pilot helper value
 func NewPilotAPIHelper() *pilotAPIHelper {
 	helper := new(pilotAPIHelper)
 	helper.response = new(http.Response)
-	helper.requestBody = new(gherkin.DocString)
+	helper.requestRaw = new(gherkin.DocString)
+	helper.requestBody = *new(endpoint.CreatePilotRequest)
+	helper.decodedBody = *new(endpoint.Response)
 	return helper
 }
 
@@ -64,7 +69,7 @@ func (step *pilotAPIHelper) sendCreatePilotRequest() (*http.Response, error) {
 	req := Request{
 		Method: http.MethodPost,
 		Uri:    fmt.Sprint(host, port, createEndpoint),
-		Body:   getGherkinStringAsReader(step.requestBody),
+		Body:   getGherkinStringAsReader(step.requestRaw),
 		Header: http.Header{"Content-Type": []string{"application/json"}},
 	}
 	return req.Send()
@@ -78,7 +83,7 @@ func (step *pilotAPIHelper) sendUpdatePilotRequest() (*http.Response, error) {
 	req := Request{
 		Method: http.MethodPatch,
 		Uri:    fmt.Sprintf("%s%s"+pilotByIDEndpoint, host, port, step.decodedPilot.Id),
-		Body:   getGherkinStringAsReader(step.requestBody),
+		Body:   getGherkinStringAsReader(step.requestRaw),
 		Header: http.Header{"Content-Type": []string{"application/json"}},
 	}
 	return req.Send()
@@ -107,7 +112,7 @@ func (step *pilotAPIHelper) getPilotRequestInvalidID() error {
 }
 
 func (step *pilotAPIHelper) getPilotRequest(ID guuid.UUID) (*http.Response, error) {
-	//log.Println(fmt.Sprintf("%s%s"+updateEndpoint, host, port, decodedPilot.Id))
+	log.Println(fmt.Sprintf("%s%s"+pilotByIDEndpoint, host, port, ID))
 	req := Request{
 		Method: http.MethodGet,
 		Uri:    fmt.Sprintf("%s%s"+pilotByIDEndpoint, host, port, ID),
@@ -124,15 +129,41 @@ func (step *pilotAPIHelper) sendRequest(requestName string) error {
 }
 
 func (step *pilotAPIHelper) sendRequestWithBody(requestName string, body *gherkin.DocString) error {
-	step.rememberRequestBody(body)
+	step.rememberRequestBody(requestName, body)
 	resp, err := step.determineRequestFunc(requestName)()
 	step.rememberResponse(resp)
 
 	return err
 }
 
-func (step *pilotAPIHelper) rememberRequestBody(body *gherkin.DocString) {
-	step.requestBody = body
+func (step *pilotAPIHelper) rememberRequestBody(requestName string, body *gherkin.DocString) error {
+	step.requestRaw = body
+	if requestName == "updatePilot" {
+		step.updateModifiedRequestValue()
+		return nil
+	} else {
+		return json.Unmarshal([]byte(body.Content), &step.requestBody)
+	}
+
+}
+
+func (step *pilotAPIHelper) updateModifiedRequestValue() {
+	var updateRequest map[string]string
+	json.Unmarshal([]byte(step.requestRaw.Content), &updateRequest)
+	for k, v := range updateRequest {
+		switch k {
+		case "codeName":
+			step.requestBody.CodeName = v
+		case "marketId":
+			if v, err := guuid.Parse(v); err == nil {
+				step.requestBody.MarketId = v
+			}
+		case "serviceId":
+			if v, err := guuid.Parse(v); err == nil {
+				step.requestBody.ServiceId = v
+			}
+		}
+	}
 }
 
 func (step *pilotAPIHelper) rememberResponse(resp *http.Response) {
@@ -179,14 +210,8 @@ func (step *pilotAPIHelper) validateResponseBody() error {
 		return err
 	}
 
-	var requestValue endpoint.CreatePilotRequest
-	if err := step.loadRequestAsStruct(&requestValue); err != nil {
-		log.Println("Failed to decode request", err)
-		return err
-	}
-
-	if !compareReqWithResponse(requestValue, step.decodedPilot) {
-		log.Printf("Request: %+v\n", requestValue)
+	if !compareReqWithResponse(step.requestBody, step.decodedPilot) {
+		log.Printf("Request: %+v\n", step.requestBody)
 		log.Printf("Decoded body: %+v\n", step.decodedBody)
 		log.Printf("Response: %+v\n", step.decodedPilot)
 		return errors.New("request and response are not equal")
@@ -196,26 +221,26 @@ func (step *pilotAPIHelper) validateResponseBody() error {
 }
 
 func (step *pilotAPIHelper) decodeBodyAsPilot() error {
-	happyBody := new(struct {
-		Data       endpoint.PilotView  `json:"data"`
-		Errors     []string            `json:"errors"`
-		Pagination endpoint.Pagination `json:"pagination"`
-	})
 	log.Println("Response: ", step.response)
-	if err := json.NewDecoder(step.response.Body).Decode(happyBody); err != nil {
+	if err := json.NewDecoder(step.response.Body).Decode(&step.decodedBody); err != nil {
 		return err
 	}
-	step.decodedBody = endpoint.Response{
-		Data:       happyBody.Data,
-		Errors:     happyBody.Errors,
-		Pagination: happyBody.Pagination,
+
+	v := reflect.ValueOf(step.decodedBody.Data)
+	if v.Kind() == reflect.Slice {
+		pilotJSON, _ := json.Marshal(step.decodedBody.Data)
+		json.Unmarshal(pilotJSON, &step.decodedPilotList)
+	} else {
+		//step.decodedPilot = step.decodedBody.Data.(endpoint.PilotView)
+		pilotJSON, _ := json.Marshal(step.decodedBody.Data)
+		json.Unmarshal(pilotJSON, &step.decodedPilot)
 	}
-	step.decodedPilot = happyBody.Data
 	return nil
 }
 
+// TO DO - validate and remove
 func (step *pilotAPIHelper) loadRequestAsStruct(pilot interface{}) error {
-	return json.Unmarshal([]byte(step.requestBody.Content), pilot)
+	return json.Unmarshal([]byte(step.requestRaw.Content), pilot)
 }
 
 func compareReqWithResponse(req endpoint.CreatePilotRequest, resp endpoint.PilotView) bool {
