@@ -1,6 +1,6 @@
 package main
 
-import "pilot-management/endpoint"
+import "gitlab.intelligentb.com/cafu/supply/pilot-management/endpoint"
 
 //------------------------------------------------------------
 // This is the main file that starts the application.

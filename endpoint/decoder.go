@@ -11,8 +11,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"pilot-management/domain"
 	"strconv"
+
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang/gddo/httputil/header"

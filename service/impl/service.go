@@ -6,10 +6,10 @@ package impl
 import (
 	"time"
 
-	"pilot-management/domain"
-	"pilot-management/repository"
-	"pilot-management/repository/impl/postgresql"
-	"pilot-management/service"
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/repository"
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/repository/impl/postgresql"
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/service"
 
 	guuid "github.com/google/uuid"
 )

@@ -6,7 +6,7 @@ package endpoint
 import (
 	"context"
 
-	"pilot-management/service"
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/service"
 
 	"github.com/go-kit/kit/endpoint"
 )

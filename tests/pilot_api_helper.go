@@ -13,7 +13,7 @@ import (
 
 	guuid "github.com/google/uuid"
 
-	"pilot-management/endpoint"
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/endpoint"
 
 	"github.com/DATA-DOG/godog/gherkin"
 )

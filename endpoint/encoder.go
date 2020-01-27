@@ -12,9 +12,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"pilot-management/domain"
 	"regexp"
 	"strings"
+
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
 
 	"github.com/go-playground/validator/v10"
 )

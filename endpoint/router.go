@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"pilot-management/service/impl"
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/service/impl"
 
 	httpTransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"

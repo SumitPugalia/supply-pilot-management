@@ -1,7 +1,7 @@
 package service
 
 import (
-	"pilot-management/domain"
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
 
 	guuid "github.com/google/uuid"
 )
