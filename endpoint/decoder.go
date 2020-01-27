@@ -15,6 +15,7 @@ import (
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang/gddo/httputil/header"
 	guuid "github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -26,8 +27,10 @@ import (
 //-------------------------------------------------------------
 
 var (
-	BadRequestError = errors.New("bad request")
-	VALIDATE        = validator.New()
+	BadRequestError    = errors.New("bad request")
+	ContentHeaderError = errors.New("Content-Type header is not application/json")
+
+	VALIDATE = validator.New()
 )
 
 //------------------------------------------------------------
@@ -161,13 +164,13 @@ func DecodeGetPilotRequest(_ context.Context, r *http.Request) (interface{}, err
 	return GetPilotRequest{Id: Id}, nil
 }
 
-func DecodeCreatePilotRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
+func DecodeCreatePilotRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req CreatePilotRequest
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&req); err != nil {
+	err := decodeJSONBody(r, &req)
+	if err != nil {
 		return nil, err
 	}
+
 	err = validateReq(req)
 	if err != nil {
 		return nil, err
@@ -188,12 +191,12 @@ func DecodeUpdatePilotRequest(_ context.Context, r *http.Request) (request inter
 	}
 
 	var req UpdatePilotRequest
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&req); err != nil {
+	req.Id = Id
+	err = decodeJSONBody(r, &req)
+	if err != nil {
 		return nil, err
 	}
-	req.Id = Id
+
 	err = validateReq(req)
 	if err != nil {
 		return nil, err
@@ -238,6 +241,30 @@ func DecodeDeletePilotRequest(_ context.Context, r *http.Request) (interface{}, 
 //------------------------------------------------------------
 //	Private function to check the validations
 //-------------------------------------------------------------
+
+func decodeJSONBody(r *http.Request, dst interface{}) error {
+	if r.Header.Get("Content-Type") != "" {
+		value, _ := header.ParseValueAndParams(r.Header, "Content-Type")
+		if value != "application/json" {
+			return ContentHeaderError
+		}
+	}
+
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+
+	err := dec.Decode(&dst)
+	if err != nil {
+		return err
+	}
+
+	if dec.More() {
+		msg := "Request body must only contain a single JSON object"
+		return errors.New(msg)
+	}
+
+	return nil
+}
 
 func validateReq(req interface{}) error {
 	err := VALIDATE.Struct(req)

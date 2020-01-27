@@ -33,7 +33,7 @@ Feature: Create Pilot
         Then the response should be 400
         And the response should have the error message 
         """
-        json: unknown field "unknownField"
+        Request body contains unknown field "unknownField"
         """
 
     @error
@@ -57,6 +57,7 @@ Feature: Create Pilot
         
         Examples:
             | uid | code | sid | mid | serid | errorMessage                                                                                |
-            | ""  | ""   | ""  | ""  | ""    | bad request |
-            | 123 | "SAD"| "A" | "W" | "2"   | bad request |
-            | "123" | "SAD"| "A" | "W" | "2"   | bad request |
+            | ""  | ""   | ""  | ""  | ""    | Id is expected to be UUID |
+            | 123 | "SAD"| "A" | "W" | "2"   | Id is expected to be UUID |
+            | "123" | "SAD"| "A" | "W" | "2"   | Id is expected to be UUID |
+            | "f8590d99-4e29-46be-a39a-8aa9574bcb2b" | 123 | "f8590d99-4e29-46be-a39a-8aa9574bcb2b" | "f8590d99-4e29-46be-a39a-8aa9574bcb2b" | "f8590d99-4e29-46be-a39a-8aa9574bcb2b" | Request body contains an invalid value for the "codeName" field |

@@ -8,9 +8,13 @@ package endpoint
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"pilot-management/domain"
 	"regexp"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -46,28 +50,59 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func EncodeErrorResponse(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	switch err.(type) {
-	case validator.ValidationErrors:
-		errs, _ := err.(validator.ValidationErrors)
+	e, ok := err.(validator.ValidationErrors)
+	if ok {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Errors: encodeV10Errors(errs)})
+		json.NewEncoder(w).Encode(Response{Errors: encodeV10Errors(e)})
 		return
-	case *json.UnmarshalTypeError:
-		errs, _ := err.(*json.UnmarshalTypeError)
+	}
+
+	var syntaxError *json.SyntaxError
+	var unmarshalTypeError *json.UnmarshalTypeError
+	switch {
+	case errors.As(err, &syntaxError):
+		msg := fmt.Sprintf("Request body contains badly-formed JSON (at position %d)", syntaxError.Offset)
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Errors: encodeUnmarshalTypeErrors(errs)})
+		json.NewEncoder(w).Encode(Response{Errors: []string{msg}})
 		return
+
+	case errors.Is(err, io.ErrUnexpectedEOF):
+		msg := fmt.Sprintf("Request body contains badly-formed JSON")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Errors: []string{msg}})
+		return
+
+	case errors.As(err, &unmarshalTypeError):
+		msg := fmt.Sprintf("Request body contains an invalid value for the %q field", unmarshalTypeError.Field)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Errors: []string{msg}})
+		return
+
+	case strings.HasPrefix(err.Error(), "json: unknown field "):
+		fieldName := strings.TrimPrefix(err.Error(), "json: unknown field ")
+		msg := fmt.Sprintf("Request body contains unknown field %s", fieldName)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Errors: []string{msg}})
+		return
+
+	case errors.Is(err, io.EOF):
+		msg := "Request body must not be empty"
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Errors: []string{msg}})
+		return
+
+	case err.Error() == "http: request body too large":
+		msg := "Request body must not be larger than 1MB"
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Errors: []string{msg}})
+		return
+
 	default:
 		e := err.Error()
 		if checkForUUIDError(e) {
+			msg := "Id is expected to be UUID"
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(Response{Errors: []string{BadRequestError.Error()}})
-			return
-		}
-
-		if checkForUnknownFieldError(e) {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(Response{Errors: []string{e}})
+			json.NewEncoder(w).Encode(Response{Errors: []string{msg}})
 			return
 		}
 
@@ -101,7 +136,7 @@ func codeFrom(err error) int {
 	case domain.PilotDoesNotExistError:
 		return http.StatusNotFound
 	default:
-		return http.StatusInternalServerError
+		return http.StatusBadRequest
 	}
 }
 
@@ -113,11 +148,6 @@ func encodeV10Errors(errs validator.ValidationErrors) []string {
 	return errorsSlice
 }
 
-func encodeUnmarshalTypeErrors(e *json.UnmarshalTypeError) []string {
-	msg := e.Field + " Expected " + e.Type.String() + " But Got " + e.Value
-	return []string{msg}
-}
-
 func toField(s string) string {
 	field := []byte(s)
 	field[0] = field[0] | ('a' - 'A')
@@ -126,10 +156,5 @@ func toField(s string) string {
 
 func checkForUUIDError(err string) bool {
 	myRegex, _ := regexp.Compile("invalid UUID length *")
-	return myRegex.MatchString(err)
-}
-
-func checkForUnknownFieldError(err string) bool {
-	myRegex, _ := regexp.Compile("json: unknown field *")
 	return myRegex.MatchString(err)
 }
