@@ -228,6 +228,14 @@ func compareReqWithResponse(req endpoint.CreatePilotRequest, resp endpoint.Pilot
 		time.Unix(resp.CreatedAt, 0).After(time.Now().Add(time.Second*-20))
 }
 
+func compareUpdateReqWithResponse(req endpoint.UpdatePilotRequest, resp endpoint.PilotView) bool {
+	return req.CodeName == resp.CodeName &&
+		req.MarketId == resp.MarketId &&
+		req.ServiceId == resp.ServiceId &&
+		time.Unix(resp.UpdatedAt, 0).After(time.Now().Add(time.Second*-10)) &&
+		time.Unix(resp.CreatedAt, 0).After(time.Now().Add(time.Second*-20))
+}
+
 func startApp(port string) {
 	endpoint.StartApp(port)
 }

@@ -65,6 +65,12 @@ func EncodeErrorResponse(_ context.Context, err error, w http.ResponseWriter) {
 			return
 		}
 
+		if checkForUnknownFieldError(e) {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(Response{Errors: []string{e}})
+			return
+		}
+
 		statusCode := codeFrom(err)
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(Response{Errors: []string{e}})
@@ -120,5 +126,10 @@ func toField(s string) string {
 
 func checkForUUIDError(err string) bool {
 	myRegex, _ := regexp.Compile("invalid UUID length *")
+	return myRegex.MatchString(err)
+}
+
+func checkForUnknownFieldError(err string) bool {
+	myRegex, _ := regexp.Compile("json: unknown field *")
 	return myRegex.MatchString(err)
 }
