@@ -6,6 +6,8 @@ package postgresql
 import (
 	"time"
 
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
 
 	guuid "github.com/google/uuid"
@@ -20,6 +22,7 @@ const (
 type PilotRepo struct {
 	readConn  sqlbuilder.Database
 	writeConn sqlbuilder.Database
+	logger    log.Logger
 }
 
 //------------------------------------------------------------
@@ -38,10 +41,11 @@ type Pilot struct {
 	Deleted    bool               `db:"deleted"`
 }
 
-func MakePostgresPilotRepo() PilotRepo {
+func MakePostgresPilotRepo(logger log.Logger) PilotRepo {
 	return PilotRepo{
 		readConn:  getReadConn(),
 		writeConn: getWriteConn(),
+		logger:    log.With(logger, "rep", "postgresql"),
 	}
 }
 
@@ -89,7 +93,7 @@ func (repo *PilotRepo) ListPilots(
 	totalPages, err := query.TotalPages()
 	if err != nil {
 		if err == db.ErrNoMoreRows {
-			return []domain.Pilot{}, 0, 0, domain.PilotDoesNotExistError
+			return []domain.Pilot{}, 0, 0, nil
 		}
 		return pilots, 0, 0, err
 	}
@@ -109,6 +113,7 @@ func (repo *PilotRepo) GetPilot(id guuid.UUID) (domain.Pilot, error) {
 	err := repo.readConn.Collection(tableName).Find(db.Cond{"id =": id, "deleted =": false}).One(&pilot)
 	if err != nil {
 		if err == db.ErrNoMoreRows {
+			level.Error(repo.logger).Log("err", err.Error())
 			return domain.Pilot{}, domain.PilotDoesNotExistError
 		}
 		return domain.Pilot{}, err

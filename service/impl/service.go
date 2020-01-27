@@ -6,21 +6,26 @@ package impl
 import (
 	"time"
 
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	guuid "github.com/google/uuid"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/repository"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/repository/impl/postgresql"
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/service"
-
-	guuid "github.com/google/uuid"
 )
 
 type ServiceImpl struct {
 	pilotRepo repository.PilotRepo
+	logger    log.Logger
 }
 
-func MakeServiceImpl() ServiceImpl {
-	pilotRepo := postgresql.MakePostgresPilotRepo()
-	return ServiceImpl{pilotRepo: &pilotRepo}
+func MakeServiceImpl(logger log.Logger) ServiceImpl {
+	pilotRepo := postgresql.MakePostgresPilotRepo(logger)
+	return ServiceImpl{
+		pilotRepo: &pilotRepo,
+		logger:    logger,
+	}
 }
 
 //------------------------------------------------------------
@@ -30,11 +35,13 @@ func MakeServiceImpl() ServiceImpl {
 // Response: list of domain.Pilot, total entries, total pages, error
 //-------------------------------------------------------------
 func (s ServiceImpl) ListPilots(params service.ListPilotParams) ([]domain.Pilot, uint, uint, error) {
+	logger := log.With(s.logger, "method", "ListPilots")
 	var status domain.PilotStatus
 	var err error
 	if params.Status != "" {
 		status, err = pilotStatus(params.Status)
 		if err != nil {
+			level.Error(logger).Log("err", err)
 			return []domain.Pilot{}, 0, 0, err
 		}
 	}
