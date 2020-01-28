@@ -6,11 +6,13 @@ package endpoint
 import (
 	"fmt"
 	"net/http"
+	"os"
 
-	"gitlab.intelligentb.com/cafu/supply/pilot-management/service/impl"
-
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	httpTransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
+	"gitlab.intelligentb.com/cafu/supply/pilot-management/service/impl"
 )
 
 //------------------------------------------------------------
@@ -28,9 +30,26 @@ func StartApp(port string) {
 // Routers that maps the routes to the endpoints for our system.
 //-------------------------------------------------------------
 func assignRoutes(router *mux.Router) *mux.Router {
-	service := impl.MakeServiceImpl()
+	var logger log.Logger
+	{
+		logger = log.NewLogfmtLogger(os.Stderr)
+		logger = log.NewSyncLogger(logger)
+		logger = level.NewFilter(logger, level.AllowDebug())
+		logger = log.With(logger,
+			"svc:", "pilot-management",
+			"ts:", log.DefaultTimestampUTC,
+			"caller:", log.DefaultCaller,
+		)
+	}
+
+	level.Info(logger).Log("msg", "service started")
+	defer level.Info(logger).Log("msg", "service ended")
+
+	service := impl.MakeServiceImpl(logger)
+
 	options := []httpTransport.ServerOption{
 		httpTransport.ServerErrorEncoder(EncodeErrorResponse),
+		httpTransport.ServerErrorLogger(logger),
 	}
 
 	statusHandler := httpTransport.NewServer(
