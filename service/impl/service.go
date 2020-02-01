@@ -78,7 +78,7 @@ func (s ServiceImpl) CreatePilot(params service.CreatePilotParams) (domain.Pilot
 		UserId:     params.UserId,
 		CodeName:   params.CodeName,
 		SupplierId: params.SupplierId,
-		Status:     "IDLE",
+		Status:     domain.IdlePilotStatus,
 		MarketId:   params.MarketId,
 		ServiceId:  params.ServiceId,
 		CreatedAt:  now,
@@ -137,15 +137,15 @@ func (s ServiceImpl) ChangePilotStatus(id guuid.UUID, status string) (domain.Pil
 //-------------------------------------------------------------
 func pilotStatus(status string) (domain.PilotStatus, error) {
 	switch status {
-	case "idle":
+	case "IDLE":
 		return domain.IdlePilotStatus, nil
-	case "active":
+	case "ACTIVE":
 		return domain.ActivePilotStatus, nil
-	case "offduty":
+	case "OFFDUTY":
 		return domain.OffDutyPilotStatus, nil
-	case "break":
+	case "BREAK":
 		return domain.BreakPilotStatus, nil
-	case "suspend":
+	case "SUSPEND":
 		return domain.SuspendPilotStatus, nil
 	default:
 		return domain.IdlePilotStatus, domain.InvalidPilotStatus

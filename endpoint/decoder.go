@@ -12,6 +12,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"gitlab.intelligentb.com/cafu/supply/pilot-management/domain"
 
@@ -221,7 +222,7 @@ func DecodeChangePilotStatusRequest(_ context.Context, r *http.Request) (request
 
 	var req ChangePilotStatusRequest
 	req.Id = Id
-	req.Status = status
+	req.Status = strings.ToUpper(status)
 	return req, nil
 }
 

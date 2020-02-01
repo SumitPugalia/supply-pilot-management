@@ -1,2 +1,2 @@
 # THINGS TO DO 
-- Logging
+- Config File

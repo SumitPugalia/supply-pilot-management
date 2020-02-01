@@ -89,6 +89,7 @@ func (repo *PilotRepo) ListPilots(
 		query = query.And(db.Cond{"status": status})
 	}
 	err := query.All(&rows)
+
 	totalEntries, err := query.TotalEntries()
 	totalPages, err := query.TotalPages()
 	if err != nil {
@@ -100,7 +101,7 @@ func (repo *PilotRepo) ListPilots(
 	for _, pilot := range rows {
 		pilots = append(pilots, domain.Pilot(pilot))
 	}
-	return pilots, uint(totalEntries), totalPages, nil
+	return pilots, uint(totalEntries), uint(totalPages), nil
 }
 
 //------------------------------------------------------------
